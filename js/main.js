@@ -3,17 +3,32 @@
 import { STORE, showToast } from "./config.js";
 import { loadAllData } from "./data-loader.js";
 import { normalizeAllData } from "./normalizer.js";
-import { initCalculator, runCalculation } from "./calculator.js";
-import { initTable, renderPricingTable } from "./table.js";
-import { initExport } from "./export.js";
+
+import {
+  initCalculator,
+  runCalculation
+} from "./calculator.js";
+
+import {
+  initTable,
+  renderPricingTable,
+  fillBrandFilter
+} from "./table.js";
+
+import {
+  initExport
+} from "./export.js";
 
 /* ----------------------------------
-   BOOT
+   APP BOOT
 -----------------------------------*/
-document.addEventListener("DOMContentLoaded", bootApp);
+document.addEventListener(
+  "DOMContentLoaded",
+  initApp
+);
 
-async function bootApp() {
-  bindGlobalUi();
+async function initApp() {
+  bindGlobalEvents();
   initTabs();
 
   initCalculator();
@@ -23,20 +38,20 @@ async function bootApp() {
   await refreshApp();
 }
 
-
 /* ----------------------------------
-   REFRESH DATA
+   REFRESH
 -----------------------------------*/
 async function refreshApp() {
   const ok = await loadAllData();
 
   if (!ok) {
-    showToast("Failed to load sheets");
+    showToast("Sheet load failed");
     return;
   }
 
   normalizeAllData();
 
+  fillBrandFilter();
   updateCounts();
 
   renderPricingTable();
@@ -44,85 +59,104 @@ async function refreshApp() {
   showToast("App ready");
 }
 
-
 /* ----------------------------------
    GLOBAL EVENTS
 -----------------------------------*/
-function bindGlobalUi() {
-  const refreshBtn = document.getElementById("refreshBtn");
-  const target = document.getElementById("profitTarget");
+function bindGlobalEvents() {
+  const refreshBtn =
+    document.getElementById("refreshBtn");
 
-  refreshBtn?.addEventListener("click", refreshApp);
+  const target =
+    document.getElementById("profitTarget");
 
-  target?.addEventListener("change", () => {
-    STORE.ui.currentTarget = Number(target.value || 5);
+  refreshBtn?.addEventListener(
+    "click",
+    refreshApp
+  );
 
-    renderPricingTable();
+  target?.addEventListener(
+    "change",
+    () => {
+      STORE.ui.currentTarget =
+        Number(target.value || 5);
 
-    const active = STORE.ui.activeTab;
+      renderPricingTable();
 
-    if (active === "calculator") {
-      runCalculation();
+      if (
+        STORE.ui.activeTab ===
+        "calculator"
+      ) {
+        runCalculation();
+      }
     }
-  });
+  );
 }
-
 
 /* ----------------------------------
    TABS
 -----------------------------------*/
 function initTabs() {
-  const tabs = document.querySelectorAll(".tab");
+  const tabs =
+    document.querySelectorAll(".tab");
 
   tabs.forEach(btn => {
-    btn.addEventListener("click", () => {
-      const tab = btn.dataset.tab;
+    btn.addEventListener(
+      "click",
+      () => {
+        const tab =
+          btn.dataset.tab;
 
-      tabs.forEach(x =>
-        x.classList.remove("active")
-      );
+        tabs.forEach(x =>
+          x.classList.remove("active")
+        );
 
-      btn.classList.add("active");
+        btn.classList.add("active");
 
-      switchPanel(tab);
+        switchTab(tab);
 
-      STORE.ui.activeTab = tab;
+        STORE.ui.activeTab = tab;
 
-      if (tab === "master") {
-        renderPricingTable();
+        if (tab === "master") {
+          renderPricingTable();
+        }
       }
-    });
+    );
   });
 }
 
-function switchPanel(tabName) {
-  const calculator =
-    document.getElementById("calculatorTab");
+function switchTab(name) {
+  const calc =
+    document.getElementById(
+      "calculatorTab"
+    );
 
   const master =
-    document.getElementById("masterTab");
+    document.getElementById(
+      "masterTab"
+    );
 
-  calculator?.classList.remove("active");
+  calc?.classList.remove("active");
   master?.classList.remove("active");
 
-  if (tabName === "calculator") {
-    calculator?.classList.add("active");
+  if (name === "calculator") {
+    calc?.classList.add("active");
   } else {
     master?.classList.add("active");
   }
 }
 
-
 /* ----------------------------------
    STATUS
 -----------------------------------*/
 function updateCounts() {
-  const recordEl =
-    document.getElementById("recordStatus");
+  const el =
+    document.getElementById(
+      "recordStatus"
+    );
 
-  if (recordEl) {
-    recordEl.textContent =
-      STORE.normalized.products.length +
-      " Styles";
-  }
+  if (!el) return;
+
+  el.textContent =
+    STORE.normalized.products.length +
+    " Styles";
 }
