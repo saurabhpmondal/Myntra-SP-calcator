@@ -1,6 +1,9 @@
 // js/calculator.js
 
-import { money, showToast } from "./config.js";
+import {
+  money,
+  showToast
+} from "./config.js";
 
 import {
   getProductByStyle,
@@ -26,10 +29,14 @@ export function initCalculator() {
 -----------------------------------*/
 function bindSearch() {
   const btn =
-    document.getElementById("calcBtn");
+    document.getElementById(
+      "calcBtn"
+    );
 
   const clr =
-    document.getElementById("clearCalcBtn");
+    document.getElementById(
+      "clearCalcBtn"
+    );
 
   btn?.addEventListener(
     "click",
@@ -44,17 +51,20 @@ function bindSearch() {
 
 export function runCalculation() {
   const style =
-    document.getElementById("calcStyleId")
-      ?.value.trim();
+    document.getElementById(
+      "calcStyleId"
+    )?.value.trim();
 
   const sku =
-    document.getElementById("calcSku")
-      ?.value.trim();
+    document.getElementById(
+      "calcSku"
+    )?.value.trim();
 
   const target =
     Number(
-      document.getElementById("profitTarget")
-        ?.value || 5
+      document.getElementById(
+        "profitTarget"
+      )?.value || 5
     );
 
   let product = null;
@@ -77,7 +87,10 @@ export function runCalculation() {
   }
 
   const r =
-    solvePrice(product, target);
+    solvePrice(
+      product,
+      target
+    );
 
   if (!r) {
     renderSearch(
@@ -86,18 +99,40 @@ export function runCalculation() {
     return;
   }
 
+  /* FORCE preserve text fields */
+  r.erpSku =
+    product.erpSku || "";
+
+  r.styleId =
+    product.styleId || "";
+
+  r.brand =
+    product.brand || "";
+
+  r.articleType =
+    product.articleType ||
+    "";
+
   renderSearchBlock(r);
-  showToast("Search done");
+
+  showToast(
+    "Search done"
+  );
 }
 
 function clearSearch() {
-  document.getElementById(
-    "calcStyleId"
-  ).value = "";
+  const a =
+    document.getElementById(
+      "calcStyleId"
+    );
 
-  document.getElementById(
-    "calcSku"
-  ).value = "";
+  const b =
+    document.getElementById(
+      "calcSku"
+    );
+
+  if (a) a.value = "";
+  if (b) b.value = "";
 
   renderSearch(
     "Search style and view pricing."
@@ -110,13 +145,15 @@ function renderSearch(msg) {
       "calcOutput"
     );
 
-  if (el) {
-    el.innerHTML =
-      `<div class="empty-box">${msg}</div>`;
-  }
+  if (!el) return;
+
+  el.innerHTML =
+    `<div class="empty-box">${msg}</div>`;
 }
 
-function renderSearchBlock(r) {
+function renderSearchBlock(
+  r
+) {
   const el =
     document.getElementById(
       "calcOutput"
@@ -210,9 +247,8 @@ function runManualCalc() {
   const product = {
     erpSku: "MANUAL",
     styleId: "999999999",
-    brand: brand,
-    articleType:
-      articleType,
+    brand,
+    articleType,
     status: "Manual",
     mrp: value * 3,
     tp:
@@ -265,13 +301,15 @@ function renderManual(msg) {
       "manualOutput"
     );
 
-  if (el) {
-    el.innerHTML =
-      `<div class="empty-box">${msg}</div>`;
-  }
+  if (!el) return;
+
+  el.innerHTML =
+    `<div class="empty-box">${msg}</div>`;
 }
 
-function renderManualBlock(r) {
+function renderManualBlock(
+  r
+) {
   const el =
     document.getElementById(
       "manualOutput"
@@ -302,10 +340,10 @@ function fullResultHtml(
 
   if (isSearch) {
     meta = `
-      ${line("ERP SKU", r.erpSku)}
-      ${line("Style ID", r.styleId)}
-      ${line("Brand", r.brand)}
-      ${line("Article", r.articleType)}
+      ${lineText("ERP SKU", r.erpSku)}
+      ${lineText("Style ID", r.styleId)}
+      ${lineText("Brand", r.brand)}
+      ${lineText("Article", r.articleType)}
     `;
   }
 
@@ -384,6 +422,18 @@ function line(
     <div class="break-row">
       <div>${label}</div>
       <div>${money(value)}</div>
+    </div>
+  `;
+}
+
+function lineText(
+  label,
+  value
+) {
+  return `
+    <div class="break-row">
+      <div>${label}</div>
+      <div>${value || ""}</div>
     </div>
   `;
 }
