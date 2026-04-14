@@ -104,6 +104,13 @@
 
   <button
     class="tab"
+    data-tab="summary"
+  >
+    Brand Summary
+  </button>
+
+  <button
+    class="tab"
     data-tab="calculator"
   >
     Calculator
@@ -121,26 +128,17 @@
 
     <div class="card">
       <div class="card-title">
-        Search Style / SKU
+        Search Style / ERP SKU
       </div>
 
       <div class="grid-4">
 
-        <div>
-          <label>Style ID</label>
+        <div style="grid-column:span 2">
+          <label>Search</label>
           <input
             type="text"
             id="calcStyleId"
-            placeholder="Enter style id"
-          >
-        </div>
-
-        <div>
-          <label>ERP SKU</label>
-          <input
-            type="text"
-            id="calcSku"
-            placeholder="Enter ERP SKU"
+            placeholder="Enter Style ID or ERP SKU"
           >
         </div>
 
@@ -207,6 +205,43 @@
         >
           Load More 50 Rows
         </button>
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- BRAND SUMMARY -->
+  <section
+    id="summaryTab"
+    class="tab-panel"
+  >
+
+    <div class="card">
+      <div class="card-title">
+        Brand Summary
+      </div>
+
+      <div class="table-wrap">
+        <table id="summaryTable">
+          <thead>
+            <tr>
+              <th>Brand</th>
+              <th>Total Styles</th>
+              <th>Avg TD%</th>
+              <th>Avg TP Profit Rs</th>
+              <th>Avg TP Profit %</th>
+            </tr>
+          </thead>
+
+          <tbody id="summaryBody">
+            <tr>
+              <td colspan="5" class="center">
+                Loading...
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
     </div>
