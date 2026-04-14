@@ -15,92 +15,154 @@ import {
    INIT
 -----------------------------------*/
 export function initCalculator() {
-  bindSearchEvents();
-  bindManualEvents();
+  bindSearch();
+  bindManual();
 }
 
 /* ----------------------------------
    SEARCH TAB
 -----------------------------------*/
-function bindSearchEvents() {
-  const btn = document.getElementById("calcBtn");
-  const clr = document.getElementById("clearCalcBtn");
+function bindSearch() {
+  const btn =
+    document.getElementById("calcBtn");
 
-  btn?.addEventListener("click", runCalculation);
-  clr?.addEventListener("click", clearSearch);
+  const clr =
+    document.getElementById("clearCalcBtn");
+
+  btn?.addEventListener(
+    "click",
+    runCalculation
+  );
+
+  clr?.addEventListener(
+    "click",
+    clearSearch
+  );
 }
 
 export function runCalculation() {
   const style =
-    document.getElementById("calcStyleId")?.value.trim();
+    document.getElementById("calcStyleId")
+      ?.value.trim();
 
   const sku =
-    document.getElementById("calcSku")?.value.trim();
+    document.getElementById("calcSku")
+      ?.value.trim();
 
   const target =
     Number(
-      document.getElementById("profitTarget")?.value || 5
+      document.getElementById("profitTarget")
+        ?.value || 5
     );
 
   let product = null;
 
-  if (style) product = getProductByStyle(style);
-  if (!product && sku) product = getProductBySku(sku);
+  if (style) {
+    product =
+      getProductByStyle(style);
+  }
+
+  if (!product && sku) {
+    product =
+      getProductBySku(sku);
+  }
 
   if (!product) {
-    renderSearch("No style found");
+    renderSearch(
+      "No style found."
+    );
     return;
   }
 
-  const r = solvePrice(product, target);
+  const r =
+    solvePrice(product, target);
 
   if (!r) {
-    renderSearch("No solution found");
+    renderSearch(
+      "No result found."
+    );
     return;
   }
 
   renderSearchBlock(r);
-  showToast("Search complete");
-}
-
-function renderSearch(msg) {
-  const el = document.getElementById("calcOutput");
-  if (el) el.innerHTML = `<div class="empty-box">${msg}</div>`;
+  showToast("Search done");
 }
 
 function clearSearch() {
-  document.getElementById("calcStyleId").value = "";
-  document.getElementById("calcSku").value = "";
-  renderSearch("Search style and view pricing.");
+  document.getElementById(
+    "calcStyleId"
+  ).value = "";
+
+  document.getElementById(
+    "calcSku"
+  ).value = "";
+
+  renderSearch(
+    "Search style and view pricing."
+  );
+}
+
+function renderSearch(msg) {
+  const el =
+    document.getElementById(
+      "calcOutput"
+    );
+
+  if (el) {
+    el.innerHTML =
+      `<div class="empty-box">${msg}</div>`;
+  }
 }
 
 function renderSearchBlock(r) {
-  const el = document.getElementById("calcOutput");
+  const el =
+    document.getElementById(
+      "calcOutput"
+    );
 
   if (!el) return;
 
-  el.innerHTML = resultHtml(r);
+  el.innerHTML =
+    fullResultHtml(r);
 }
 
 /* ----------------------------------
-   MANUAL CALCULATOR TAB
+   MANUAL TAB
 -----------------------------------*/
-function bindManualEvents() {
-  const mode = document.getElementById("manualMode");
-  const btn = document.getElementById("manualCalcBtn");
+function bindManual() {
+  const mode =
+    document.getElementById(
+      "manualMode"
+    );
 
-  mode?.addEventListener("change", updateManualLabel);
-  btn?.addEventListener("click", runManualCalc);
+  const btn =
+    document.getElementById(
+      "manualCalcBtn"
+    );
+
+  mode?.addEventListener(
+    "change",
+    updateManualLabel
+  );
+
+  btn?.addEventListener(
+    "click",
+    runManualCalc
+  );
 
   updateManualLabel();
 }
 
 function updateManualLabel() {
   const mode =
-    document.getElementById("manualMode")?.value;
+    document.getElementById(
+      "manualMode"
+    )?.value;
 
   const label =
-    document.getElementById("manualInputLabel");
+    document.getElementById(
+      "manualInputLabel"
+    );
 
   if (!label) return;
 
@@ -112,123 +174,105 @@ function updateManualLabel() {
 
 function runManualCalc() {
   const mode =
-    document.getElementById("manualMode")?.value;
+    document.getElementById(
+      "manualMode"
+    )?.value;
 
   const brand =
-    document.getElementById("manualBrand")?.value;
+    document.getElementById(
+      "manualBrand"
+    )?.value;
 
-  const val =
+  const value =
     Number(
-      document.getElementById("manualInput")?.value || 0
+      document.getElementById(
+        "manualInput"
+      )?.value || 0
     );
 
-  if (!brand || !val) {
-    renderManual("Enter all inputs.");
+  if (!brand || !value) {
+    renderManual(
+      "Enter all inputs."
+    );
     return;
   }
 
-  const dummyProduct = {
+  const product = {
     erpSku: "MANUAL",
-    styleId: "MANUAL",
+    styleId: "999999999",
     brand: brand,
     articleType: "Saree",
     status: "Manual",
-    mrp: val * 3,
-    tp: mode === "tp" ? val : 0
+    mrp: value * 3,
+    tp:
+      mode === "tp"
+        ? value
+        : 0
   };
 
   let result = null;
 
   if (mode === "tp") {
-    result = solvePrice(dummyProduct, 5);
+    result =
+      solvePrice(product, 5);
   } else {
-    result = evaluatePrice(dummyProduct, val);
+    result =
+      evaluatePrice(
+        product,
+        value
+      );
+
+    result.tp =
+      result.payoutAfterCodb;
+
+    result.tpProfitRs = 0;
+    result.tpProfitPct = 0;
   }
 
   if (!result) {
-    renderManual("No result found.");
+    renderManual(
+      "No result found."
+    );
     return;
   }
 
-  renderManualBlock(result, mode);
+  renderManualBlock(result);
   showToast("Calculated");
 }
 
 function renderManual(msg) {
-  const el = document.getElementById("manualOutput");
-  if (el) el.innerHTML = `<div class="empty-box">${msg}</div>`;
+  const el =
+    document.getElementById(
+      "manualOutput"
+    );
+
+  if (el) {
+    el.innerHTML =
+      `<div class="empty-box">${msg}</div>`;
+  }
 }
 
-function renderManualBlock(r, mode) {
-  const el = document.getElementById("manualOutput");
+function renderManualBlock(r) {
+  const el =
+    document.getElementById(
+      "manualOutput"
+    );
+
   if (!el) return;
 
-  let top = "";
-
-  if (mode === "tp") {
-    top = `
-      <div class="result-box">
-        <div class="result-label">Recommended SP</div>
-        <div class="result-value">
-          ₹${money(r.sp)}
-        </div>
-      </div>
-    `;
-  } else {
-    top = `
-      <div class="result-box">
-        <div class="result-label">Effective TP</div>
-        <div class="result-value">
-          ₹${money(r.payoutAfterCodb)}
-        </div>
-      </div>
-    `;
-  }
-
-  el.innerHTML = `
-    <div class="result-grid">
-      ${top}
-
-      <div class="result-box">
-        <div class="result-label">GT</div>
-        <div class="result-value">
-          ₹${money(r.gta)}
-        </div>
-      </div>
-
-      <div class="result-box">
-        <div class="result-label">List Price</div>
-        <div class="result-value">
-          ₹${money(r.listPrice)}
-        </div>
-      </div>
-
-      <div class="result-box">
-        <div class="result-label">Profit</div>
-        <div class="result-value">
-          ₹${money(r.tpProfitRs)}
-        </div>
-      </div>
-    </div>
-
-    <div class="breakdown">
-      ${line("SP", r.sp)}
-      ${line("TP", r.tp)}
-      ${line("Upload Settlement", r.uploadSettlement)}
-      ${line("Bank Settlement", r.bankSettlement)}
-      ${line("Royalty", r.royalty)}
-      ${line("Marketing", r.marketing)}
-      ${line("Dispatch", r.dispatchCost)}
-      ${line("RTV CODB", r.rtvCodb)}
-      ${line("Payout After CODB", r.payoutAfterCodb)}
-    </div>
-  `;
+  el.innerHTML =
+    fullResultHtml(r);
 }
 
 /* ----------------------------------
-   COMMON HTML
+   FULL RESULT HTML
 -----------------------------------*/
-function resultHtml(r) {
+function fullResultHtml(r) {
+  const cls =
+    r.tpProfitRs >= 0
+      ? "success"
+      : "danger";
+
   return `
     <div class="result-grid">
 
@@ -247,38 +291,66 @@ function resultHtml(r) {
       </div>
 
       <div class="result-box">
-        <div class="result-label">Profit</div>
-        <div class="result-value">
+        <div class="result-label">Profit Rs</div>
+        <div class="result-value ${cls}">
           ₹${money(r.tpProfitRs)}
         </div>
       </div>
 
       <div class="result-box">
-        <div class="result-label">RTV%</div>
-        <div class="result-value">
-          ${money(r.rtvPct)}%
+        <div class="result-label">Profit %</div>
+        <div class="result-value ${cls}">
+          ${money(r.tpProfitPct)}%
         </div>
       </div>
 
     </div>
 
     <div class="breakdown">
-      ${line("GT", r.gta)}
+
+      ${line("ERP SKU", r.erpSku)}
+      ${line("Style ID", r.styleId)}
+      ${line("Brand", r.brand)}
+      ${line("Article", r.articleType)}
+      ${line("Status", r.status)}
+
+      ${line("MRP", r.mrp)}
+      ${line("GT Charge", r.gta)}
       ${line("List Price", r.listPrice)}
-      ${line("Upload", r.uploadSettlement)}
-      ${line("Bank", r.bankSettlement)}
+
+      ${line("Commission %", r.commissionPct)}
+      ${line("Commission Rs", r.commissionRs)}
+      ${line("Fixed Fee", r.fixedFee)}
+      ${line("Tax", r.taxOnComFixed)}
+
+      ${line("Upload Settlement", r.uploadSettlement)}
+      ${line("TDS + TCS", r.tdsTcs)}
+      ${line("Bank Settlement", r.bankSettlement)}
+
+      ${line("Royalty", r.royalty)}
+      ${line("Marketing", r.marketing)}
+      ${line("Rebate", r.rebate)}
+
+      ${line("Payout Before CODB", r.payoutBeforeCodb)}
+
       ${line("Dispatch", r.dispatchCost)}
+      ${line("Return Charge", r.returnCharge)}
+      ${line("Return Cost", r.returnCost)}
+
+      ${line("RTV %", r.rtvPct)}
       ${line("RTV CODB", r.rtvCodb)}
-      ${line("Payout After", r.payoutAfterCodb)}
+
+      ${line("Payout After CODB", r.payoutAfterCodb)}
+
     </div>
   `;
 }
 
-function line(label, val) {
+function line(label, value) {
   return `
     <div class="break-row">
       <div>${label}</div>
-      <div>${money(val)}</div>
+      <div>${money(value)}</div>
     </div>
   `;
 }
