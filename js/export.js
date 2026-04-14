@@ -1,7 +1,7 @@
 // js/export.js
 
-import { STORE, money, showToast } from "./config.js";
-import { solvePrice } from "./pricing-engine.js";
+import { showToast } from "./config.js";
+import { getVisibleRows } from "./table.js";
 
 /* ----------------------------------
    INIT
@@ -9,80 +9,38 @@ import { solvePrice } from "./pricing-engine.js";
 export function initExport() {
   const btn = document.getElementById("exportBtn");
 
-  btn?.addEventListener("click", exportPricingCsv);
+  btn?.addEventListener("click", exportVisibleTable);
 }
 
-
 /* ----------------------------------
-   EXPORT CSV
+   EXPORT EXACT VISIBLE TABLE
 -----------------------------------*/
-function exportPricingCsv() {
-  const rows = buildExportRows();
+function exportVisibleTable() {
+  const rows = getVisibleRows();
 
   if (!rows.length) {
-    showToast("No rows to export");
+    showToast("No data to export");
     return;
   }
 
-  const csv = arrayToCsv(rows);
-  const blob = new Blob([csv], {
-    type: "text/csv;charset=utf-8;"
-  });
+  const data = [];
 
-  const url = URL.createObjectURL(blob);
-
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = fileName();
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-
-  URL.revokeObjectURL(url);
-
-  showToast("CSV exported");
-}
-
-
-/* ----------------------------------
-   BUILD DATA
------------------------------------*/
-function buildExportRows() {
-  const target = STORE.ui.currentTarget;
-  const search = STORE.ui.searchText;
-  const limit = STORE.ui.rowLimit;
-
-  let data = [...STORE.normalized.products];
-
-  if (search) {
-    data = data.filter(item =>
-      item.erpSku.toLowerCase().includes(search) ||
-      item.styleId.toLowerCase().includes(search) ||
-      item.brand.toLowerCase().includes(search) ||
-      item.articleType.toLowerCase().includes(search)
-    );
-  }
-
-  data = data.slice(0, limit);
-
-  const rows = [];
-
-  rows.push([
+  data.push([
     "ERP SKU",
     "Style ID",
     "Brand",
     "Article",
-    "ERP Status",
+    "Status",
     "MRP",
     "SP",
     "GT Charge",
     "List Price",
     "Com %",
     "Com Rs",
-    "Fixed Fee Rs",
-    "Tax on Com+Fixed Fee",
+    "Fixed Fee",
+    "Tax on Com+Fixed",
     "Upload Settlement",
-    "TDS + TCS",
+    "TDS+TCS",
     "Bank Settlement",
     "Royalty",
     "Marketing",
@@ -91,70 +49,78 @@ function buildExportRows() {
     "Dispatch Cost",
     "Return Charge",
     "Return Cost",
+    "RTV %",
     "RTV CODB",
     "Payout After CODB",
-    "TP Profit %",
-    "TP Profit Rs",
     "TP",
-    "RTV %"
+    "TP Profit Rs",
+    "TP Profit %"
   ]);
 
-  data.forEach(product => {
-    const r = solvePrice(product, target);
-
-    if (!r) return;
-
-    rows.push([
+  rows.forEach(r => {
+    data.push([
       r.erpSku,
       r.styleId,
       r.brand,
       r.articleType,
       r.status,
-      money(r.mrp),
-      money(r.sp),
-      money(r.gta),
-      money(r.listPrice),
-      money(r.commissionPct),
-      money(r.commissionRs),
-      money(r.fixedFee),
-      money(r.taxOnComFixed),
-      money(r.uploadSettlement),
-      money(r.tdsTcs),
-      money(r.bankSettlement),
-      money(r.royalty),
-      money(r.marketing),
-      money(r.rebate),
-      money(r.payoutBeforeCodb),
-      money(r.dispatchCost),
-      money(r.returnCharge),
-      money(r.returnCost),
-      money(r.rtvCodb),
-      money(r.payoutAfterCodb),
-      money(r.tpProfitPct),
-      money(r.tpProfitRs),
-      money(r.tp),
-      money(r.rtvPct)
+
+      fix(r.mrp),
+      fix(r.sp),
+      fix(r.gta),
+      fix(r.listPrice),
+
+      fix(r.commissionPct),
+      fix(r.commissionRs),
+      fix(r.fixedFee),
+      fix(r.taxOnComFixed),
+
+      fix(r.uploadSettlement),
+      fix(r.tdsTcs),
+      fix(r.bankSettlement),
+
+      fix(r.royalty),
+      fix(r.marketing),
+      fix(r.rebate),
+
+      fix(r.payoutBeforeCodb),
+
+      fix(r.dispatchCost),
+      fix(r.returnCharge),
+      fix(r.returnCost),
+
+      fix(r.rtvPct),
+      fix(r.rtvCodb),
+
+      fix(r.payoutAfterCodb),
+
+      fix(r.tp),
+      fix(r.tpProfitRs),
+      fix(r.tpProfitPct)
     ]);
   });
 
-  return rows;
+  downloadCsv(toCsv(data), fileName());
+
+  showToast("CSV exported");
 }
 
-
 /* ----------------------------------
-   CSV HELPERS
+   HELPERS
 -----------------------------------*/
-function arrayToCsv(rows) {
+function fix(v) {
+  return Number(v || 0).toFixed(2);
+}
+
+function toCsv(rows) {
   return rows
     .map(row =>
-      row
-        .map(cell => escapeCsv(cell))
-        .join(",")
+      row.map(cell => esc(cell)).join(",")
     )
     .join("\n");
 }
 
-function escapeCsv(value) {
+function esc(value) {
   const text = String(value ?? "");
 
   if (
@@ -166,6 +132,22 @@ function escapeCsv(value) {
   }
 
   return text;
+}
+
+function downloadCsv(content, file) {
+  const blob = new Blob(
+    [content],
+    { type: "text/csv;charset=utf-8;" }
+  );
+
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = file;
+  a.click();
+
+  URL.revokeObjectURL(url);
 }
 
 function fileName() {
