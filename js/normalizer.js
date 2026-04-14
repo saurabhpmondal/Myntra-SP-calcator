@@ -55,10 +55,10 @@ function normalizeCommercials() {
   const rows = STORE.raw.commercials || [];
 
   STORE.normalized.commercials = rows.map(row => ({
-    brand: text(row.brand).toLowerCase(),
-    articleType: text(
+    brand: norm(row.brand),
+    articleType: norm(
       row.article_type
-    ).toLowerCase(),
+    ),
 
     lower: num(row.lower_limit),
     upper: num(row.upper_limit),
@@ -82,11 +82,11 @@ function normalizeGta() {
   const rows = STORE.raw.gta || [];
 
   STORE.normalized.gta = rows.map(row => ({
-    brand: text(row.brand).toLowerCase(),
+    brand: norm(row.brand),
 
-    articleType: text(
+    articleType: norm(
       row.article_type
-    ).toLowerCase(),
+    ),
 
     level: text(row.level).toLowerCase(),
 
@@ -104,34 +104,37 @@ function normalizeGta() {
 -----------------------------------*/
 function buildRtvMap() {
   const orders = STORE.raw.orders || [];
-  const returnsData = STORE.raw.returns || [];
+  const returnsData =
+    STORE.raw.returns || [];
 
   const orderLineMap = {};
   const orderCount = {};
   const returnCount = {};
 
-  /* Orders */
   orders.forEach(row => {
-    const styleId = cleanStyleId(
-      row.style_id || row.styleid
-    );
+    const styleId =
+      cleanStyleId(
+        row.style_id ||
+        row.styleid
+      );
 
     const orderLine = text(
       row.order_line_id ||
       row.orderlineid
     );
 
-    if (!styleId || styleId === "0") return;
+    if (!styleId || styleId === "0")
+      return;
 
     orderCount[styleId] =
       (orderCount[styleId] || 0) + 1;
 
     if (orderLine) {
-      orderLineMap[orderLine] = styleId;
+      orderLineMap[orderLine] =
+        styleId;
     }
   });
 
-  /* Returns */
   returnsData.forEach(row => {
     const orderLine = text(
       row.order_line_id ||
@@ -152,11 +155,15 @@ function buildRtvMap() {
   const rtvMap = {};
 
   Object.keys(orderCount).forEach(id => {
-    const ord = orderCount[id] || 0;
-    const ret = returnCount[id] || 0;
+    const ord =
+      orderCount[id] || 0;
+
+    const ret =
+      returnCount[id] || 0;
 
     let pct =
-      CONFIG.COSTS.DEFAULT_RTV_PERCENT;
+      CONFIG.COSTS
+        .DEFAULT_RTV_PERCENT;
 
     if (ord > 0) {
       pct = (ret / ord) * 100;
@@ -165,14 +172,18 @@ function buildRtvMap() {
     rtvMap[id] = round2(pct);
   });
 
-  STORE.normalized.rtvMap = rtvMap;
+  STORE.normalized.rtvMap =
+    rtvMap;
 }
 
 /* ----------------------------------
    LOOKUPS
 -----------------------------------*/
-export function getProductByStyle(styleId) {
-  const key = cleanStyleId(styleId);
+export function getProductByStyle(
+  styleId
+) {
+  const key =
+    cleanStyleId(styleId);
 
   return (
     STORE.normalized.products.find(
@@ -181,24 +192,46 @@ export function getProductByStyle(styleId) {
   );
 }
 
-export function getProductBySku(sku) {
-  const key = text(sku).toLowerCase();
+export function getProductBySku(
+  sku
+) {
+  const key =
+    text(sku).toLowerCase();
 
   return (
     STORE.normalized.products.find(
       x =>
-        x.erpSku.toLowerCase() === key
+        x.erpSku.toLowerCase() ===
+        key
     ) || null
   );
 }
 
 export function getRtv(styleId) {
-  const key = cleanStyleId(styleId);
+  const key =
+    cleanStyleId(styleId);
 
   return (
     STORE.normalized.rtvMap[key] ??
-    CONFIG.COSTS.DEFAULT_RTV_PERCENT
+    CONFIG.COSTS
+      .DEFAULT_RTV_PERCENT
   );
+}
+
+/* NEW: derive article from brand */
+export function getBrandArticleType(
+  brand
+) {
+  const b = norm(brand);
+
+  const row =
+    STORE.normalized.products.find(
+      x => norm(x.brand) === b
+    );
+
+  return row
+    ? row.articleType
+    : "SAREES";
 }
 
 export function findCommercial(
@@ -206,19 +239,31 @@ export function findCommercial(
   articleType,
   sellerPrice
 ) {
-  const b = text(brand).toLowerCase();
-  const a = text(articleType).toLowerCase();
+  const b = norm(brand);
+  const a = norm(articleType);
   const sp = num(sellerPrice);
 
-  return (
+  let row =
     STORE.normalized.commercials.find(
-      row =>
-        row.brand === b &&
-        row.articleType === a &&
-        sp >= row.lower &&
-        sp <= row.upper
-    ) || null
-  );
+      x =>
+        x.brand === b &&
+        x.articleType === a &&
+        sp >= x.lower &&
+        sp <= x.upper
+    );
+
+  /* fallback by brand only */
+  if (!row) {
+    row =
+      STORE.normalized.commercials.find(
+        x =>
+          x.brand === b &&
+          sp >= x.lower &&
+          sp <= x.upper
+      );
+  }
+
+  return row || null;
 }
 
 export function findGta(
@@ -227,21 +272,35 @@ export function findGta(
   level,
   customerSp
 ) {
-  const b = text(brand).toLowerCase();
-  const a = text(articleType).toLowerCase();
-  const l = text(level).toLowerCase();
+  const b = norm(brand);
+  const a = norm(articleType);
+  const l =
+    text(level).toLowerCase();
   const sp = num(customerSp);
 
-  return (
+  let row =
     STORE.normalized.gta.find(
-      row =>
-        row.brand === b &&
-        row.articleType === a &&
-        row.level === l &&
-        sp >= row.lower &&
-        sp <= row.upper
-    ) || null
-  );
+      x =>
+        x.brand === b &&
+        x.articleType === a &&
+        x.level === l &&
+        sp >= x.lower &&
+        sp <= x.upper
+    );
+
+  /* fallback ignore article */
+  if (!row) {
+    row =
+      STORE.normalized.gta.find(
+        x =>
+          x.brand === b &&
+          x.level === l &&
+          sp >= x.lower &&
+          sp <= x.upper
+      );
+  }
+
+  return row || null;
 }
 
 /* ----------------------------------
@@ -253,8 +312,17 @@ function cleanStyleId(v) {
     .trim();
 }
 
+function norm(v) {
+  return text(v)
+    .toLowerCase()
+    .replace(/sarees/g, "saree")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function round2(v) {
   return Math.round(
-    (Number(v) + Number.EPSILON) * 100
+    (Number(v) + Number.EPSILON) *
+      100
   ) / 100;
 }
