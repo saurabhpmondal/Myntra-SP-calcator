@@ -8,28 +8,26 @@ import {
 } from "./normalizer.js";
 
 /* ----------------------------------
-   PUBLIC API
+   PUBLIC
 -----------------------------------*/
 
-/**
- * Solve reverse SP based on TP target
- * targetPct examples:
- *  5  => TP +5%
- *  0  => TP +0%
- * -5  => TP -5%
- */
 export function solvePrice(product, targetPct = 5) {
   const tp = num(product.tp);
-  const targetValue = tp * (1 + (num(targetPct) / 100));
+  const targetValue =
+    tp * (1 + num(targetPct) / 100);
 
-  for (let seed = Math.max(99, Math.ceil(tp)); seed <= CONFIG.LIMITS.MAX_SP_SEARCH; seed++) {
+  for (
+    let seed = Math.max(99, Math.ceil(tp));
+    seed <= CONFIG.LIMITS.MAX_SP_SEARCH;
+    seed++
+  ) {
     const sp = roundToNext9(seed);
 
     const calc = evaluatePrice(product, sp);
 
     if (calc.payoutAfterCodb >= targetValue) {
-      calc.targetTp = targetValue;
       calc.targetPct = targetPct;
+      calc.targetValue = targetValue;
       return calc;
     }
 
@@ -40,91 +38,135 @@ export function solvePrice(product, targetPct = 5) {
 }
 
 
-/**
- * Full calculation for one SP
- */
 export function evaluatePrice(product, sp) {
-  const styleId = product.styleId;
-  const rtvPct = getRtv(styleId);
+  const tp = num(product.tp);
+  const rtvPct = getRtv(product.styleId);
 
-  /* temp commercial guess pass 1 */
+  /* pass 1 */
   let sellerPrice = sp;
-  let comm = findCommercial(product.brand, product.articleType, sellerPrice);
 
-  if (!comm) {
-    comm = defaultCommercial();
-  }
+  let comm =
+    findCommercial(
+      product.brand,
+      product.articleType,
+      sellerPrice
+    ) || defaultCommercial();
 
-  /* GTA from customer SP */
-  let gtaRow = findGta(
-    product.brand,
-    product.articleType,
-    comm.level,
-    sp
-  );
+  let gtaRow =
+    findGta(
+      product.brand,
+      product.articleType,
+      comm.level,
+      sp
+    );
 
-  const gta = gtaRow ? gtaRow.gtaCharges : 0;
+  const gta =
+    gtaRow ? num(gtaRow.gtaCharges) : 0;
 
-  /* final seller price */
   sellerPrice = sp - gta;
 
-  /* rematch commercials on seller price */
-  comm = findCommercial(product.brand, product.articleType, sellerPrice) || comm;
+  /* final pass */
+  comm =
+    findCommercial(
+      product.brand,
+      product.articleType,
+      sellerPrice
+    ) || comm;
 
-  const commissionPct = num(comm.commission);
-  const royaltyPct = num(comm.royalty);
-  const marketingPct = num(comm.marketing);
-  const fixedFee = num(comm.fixedFee);
-  const collectionFee = CONFIG.COSTS.COLLECTION_FEE;
+  const commissionPct =
+    num(comm.commission);
 
-  const commissionRs = sellerPrice * commissionPct / 100;
+  const fixedFee =
+    num(comm.fixedFee);
 
-  const gstBase = commissionRs + fixedFee + collectionFee;
-  const gstFees = gstBase * CONFIG.TAX.GST_PERCENT / 100;
+  const royaltyPct =
+    num(comm.royalty);
+
+  const marketingPct =
+    num(comm.marketing);
+
+  const collectionFee =
+    CONFIG.COSTS.COLLECTION_FEE;
+
+  /* seller side */
+  const commissionRs =
+    sellerPrice *
+    commissionPct / 100;
+
+  const gstBase =
+    commissionRs +
+    fixedFee +
+    collectionFee;
+
+  const taxOnComFixed =
+    gstBase *
+    CONFIG.TAX.GST_PERCENT / 100;
 
   const uploadSettlement =
     sellerPrice
     - commissionRs
     - fixedFee
     - collectionFee
-    - gstFees;
+    - taxOnComFixed;
 
-  const tds = uploadSettlement * CONFIG.TAX.TDS_PERCENT / 100;
-  const tcs = uploadSettlement * CONFIG.TAX.TCS_PERCENT / 100;
-  const totalTaxHold = tds + tcs;
+  const tds =
+    uploadSettlement *
+    CONFIG.TAX.TDS_PERCENT / 100;
 
-  const bankSettlement = uploadSettlement - totalTaxHold;
+  const tcs =
+    uploadSettlement *
+    CONFIG.TAX.TCS_PERCENT / 100;
 
-  const royaltyRs = sp * royaltyPct / 100;
-  const marketingRs = sp * marketingPct / 100;
+  const tdsTcs = tds + tcs;
+
+  const bankSettlement =
+    uploadSettlement - tdsTcs;
+
+  /* SP side */
+  const royalty =
+    sp * royaltyPct / 100;
+
+  const marketing =
+    sp * marketingPct / 100;
+
   const rebate = 0;
 
   const payoutBeforeCodb =
     bankSettlement
-    - royaltyRs
-    - marketingRs
+    - royalty
+    - marketing
     - rebate;
 
-  const dispatchCost = getDispatchCost(sp);
+  const dispatchCost =
+    getDispatchCost(sp);
 
-  const returnCharge = CONFIG.COSTS.RETURN_CHARGE;
+  const returnCharge =
+    CONFIG.COSTS.RETURN_CHARGE;
 
   const returnCost =
     (fixedFee + returnCharge) *
     (1 + CONFIG.TAX.GST_PERCENT / 100);
 
-  const rtvCodb =
+  /* capped RTV CODB */
+  const rawRtvCodb =
     (returnCost * rtvPct) /
     (100 - rtvPct);
+
+  const rtvCodb =
+    Math.min(rawRtvCodb, returnCost);
 
   const payoutAfterCodb =
     payoutBeforeCodb
     - dispatchCost
     - rtvCodb;
 
-  const tp = num(product.tp);
-  const tpProfitRs = payoutAfterCodb - tp;
-  const tpProfitPct = tp > 0 ? (tpProfitRs / tp) * 100 : 0;
+  const tpProfitRs =
+    payoutAfterCodb - tp;
+
+  const tpProfitPct =
+    tp > 0
+      ? (tpProfitRs / tp) * 100
+      : 0;
 
   return {
     erpSku: product.erpSku,
@@ -142,14 +184,14 @@ export function evaluatePrice(product, sp) {
     commissionPct,
     commissionRs,
     fixedFee,
-    taxOnComFixed: gstFees,
+    taxOnComFixed,
 
     uploadSettlement,
-    tdsTcs: totalTaxHold,
+    tdsTcs,
     bankSettlement,
 
-    royalty: royaltyRs,
-    marketing: marketingRs,
+    royalty,
+    marketing,
     rebate,
 
     payoutBeforeCodb,
@@ -157,13 +199,14 @@ export function evaluatePrice(product, sp) {
     dispatchCost,
     returnCharge,
     returnCost,
+
     rtvPct,
     rtvCodb,
 
     payoutAfterCodb,
 
-    tpProfitPct,
-    tpProfitRs
+    tpProfitRs,
+    tpProfitPct
   };
 }
 
@@ -173,21 +216,16 @@ export function evaluatePrice(product, sp) {
 -----------------------------------*/
 
 function getDispatchCost(sp) {
-  if (sp < CONFIG.DISPATCH.LOW_LIMIT) {
-    return CONFIG.DISPATCH.LOW_COST;
-  }
-
-  if (sp <= CONFIG.DISPATCH.HIGH_LIMIT) {
-    return CONFIG.DISPATCH.MID_COST;
-  }
-
-  return CONFIG.DISPATCH.HIGH_COST;
+  if (sp < 500) return 25;
+  if (sp <= 1000) return 30;
+  return 35;
 }
 
 function roundToNext9(value) {
   const n = Math.ceil(num(value));
 
-  const base = Math.floor(n / 10) * 10 + CONFIG.ROUNDING.END_DIGIT;
+  const base =
+    Math.floor(n / 10) * 10 + 9;
 
   if (base >= n) return base;
 
@@ -196,7 +234,7 @@ function roundToNext9(value) {
 
 function defaultCommercial() {
   return {
-    commission: 25,
+    commission: 0,
     level: "default",
     royalty: 0,
     marketing: 0,
