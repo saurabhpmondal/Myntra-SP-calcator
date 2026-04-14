@@ -1,248 +1,129 @@
 /* css/layout.css */
 
-.topbar{
-  position:sticky;
-  top:0;
-  z-index:30;
-  background:#ffffff;
-  border-bottom:1px solid #e8ebef;
-  padding:12px 14px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
+/* ----------------------------------
+   TAB PANELS
+-----------------------------------*/
+.tab-panel {
+  display: none;
 }
 
-.brand-wrap{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  min-width:0;
+.tab-panel.active {
+  display: block;
 }
 
-.logo-box{
-  width:42px;
-  height:42px;
-  border-radius:12px;
-  background:#111111;
-  color:#ffffff;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:800;
-  font-size:20px;
-  flex-shrink:0;
+/* ----------------------------------
+   TABLE WRAP
+-----------------------------------*/
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
-.app-title{
-  font-size:18px;
-  line-height:1.1;
+/* ----------------------------------
+   TABLE BASE
+-----------------------------------*/
+table {
+  width: 100%;
+  min-width: 1400px;
+  border-collapse: collapse;
+  background: #ffffff;
 }
 
-.sub-title{
-  font-size:12px;
-  color:#6b7280;
-  margin-top:2px;
+th,
+td {
+  padding: 10px 12px;
+  white-space: nowrap;
+  border-bottom: 1px solid #ececec;
+  text-align: left;
+  font-size: 13px;
 }
 
-.top-actions{
-  display:flex;
-  align-items:center;
-  gap:8px;
+thead th {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: #111111;
+  color: #ffffff;
 }
 
-.status-strip{
-  padding:10px 14px;
-  display:flex;
-  flex-wrap:wrap;
-  gap:8px;
+/* ----------------------------------
+   STICKY FIRST 2 COLUMNS
+-----------------------------------*/
+#pricingTable th:nth-child(1),
+#pricingTable td:nth-child(1) {
+  position: sticky;
+  left: 0;
+  z-index: 6;
+  background: #ffffff;
 }
 
-.control-panel{
-  padding:0 14px 12px;
-  display:grid;
-  grid-template-columns:180px 1fr 110px 140px;
-  gap:10px;
-  align-items:end;
+#pricingTable th:nth-child(2),
+#pricingTable td:nth-child(2) {
+  position: sticky;
+  left: 140px;
+  z-index: 6;
+  background: #ffffff;
 }
 
-.control-item{
-  min-width:0;
+#pricingTable thead th:nth-child(1),
+#pricingTable thead th:nth-child(2) {
+  background: #111111;
+  color: #ffffff;
+  z-index: 8;
 }
 
-.control-item.grow{
-  width:100%;
+/* ----------------------------------
+   SUMMARY TABLE
+-----------------------------------*/
+#summaryTable {
+  min-width: 700px;
 }
 
-.tabs{
-  padding:0 14px;
-  display:flex;
-  gap:8px;
-  margin-bottom:12px;
+#summaryTable th,
+#summaryTable td {
+  text-align: left;
 }
 
-.tab{
-  height:42px;
-  padding:0 18px;
-  border-radius:12px 12px 0 0;
-  font-weight:700;
-  border:1px solid #e5e7eb;
+#summaryTable td:nth-child(n+2),
+#summaryTable th:nth-child(n+2) {
+  text-align: right;
 }
 
-.page-wrap{
-  padding:0 14px 20px;
+/* ----------------------------------
+   HELPERS
+-----------------------------------*/
+.center {
+  text-align: center !important;
 }
 
-.tab-panel{
-  display:none;
+.success {
+  color: #14803c;
+  font-weight: 700;
 }
 
-.tab-panel.active{
-  display:block;
+.danger {
+  color: #c62828;
+  font-weight: 700;
 }
 
-.grid-4{
-  display:grid;
-  grid-template-columns:1fr 1fr 180px 140px;
-  gap:10px;
-  align-items:end;
-}
+/* ----------------------------------
+   MOBILE
+-----------------------------------*/
+@media (max-width: 768px) {
 
-.table-wrap{
-  overflow:auto;
-  max-height:72vh;
-  border:1px solid #edf0f2;
-  border-radius:12px;
-}
-
-#pricingTable thead th{
-  position:sticky;
-  top:0;
-  z-index:2;
-}
-
-.result-grid{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:10px;
-}
-
-.result-box{
-  border:1px solid #edf0f2;
-  border-radius:12px;
-  padding:12px;
-  background:#fafafa;
-}
-
-.result-label{
-  font-size:11px;
-  color:#6b7280;
-  text-transform:uppercase;
-  margin-bottom:6px;
-}
-
-.result-value{
-  font-size:18px;
-  font-weight:800;
-}
-
-.breakdown{
-  margin-top:12px;
-  border-top:1px dashed #e5e7eb;
-  padding-top:12px;
-}
-
-.break-row{
-  display:flex;
-  justify-content:space-between;
-  gap:10px;
-  padding:6px 0;
-  border-bottom:1px dashed #f0f1f3;
-  font-size:13px;
-}
-
-.break-row:last-child{
-  border-bottom:none;
-}
-
-.right{
-  text-align:right;
-}
-
-.center{
-  text-align:center;
-}
-
-.hide{
-  display:none !important;
-}
-
-/* Tablet */
-@media (max-width:1024px){
-
-  .control-panel{
-    grid-template-columns:1fr 1fr;
+  table {
+    font-size: 12px;
   }
 
-  .grid-4{
-    grid-template-columns:1fr 1fr;
+  th,
+  td {
+    padding: 9px 10px;
   }
 
-  .result-grid{
-    grid-template-columns:1fr 1fr;
+  #pricingTable th:nth-child(2),
+  #pricingTable td:nth-child(2) {
+    left: 125px;
   }
-
-}
-
-/* Mobile */
-@media (max-width:768px){
-
-  .topbar{
-    padding:10px 12px;
-    align-items:flex-start;
-    flex-direction:column;
-  }
-
-  .top-actions{
-    width:100%;
-  }
-
-  .top-actions .btn{
-    width:100%;
-  }
-
-  .app-title{
-    font-size:16px;
-  }
-
-  .control-panel{
-    grid-template-columns:1fr;
-    padding:0 12px 12px;
-  }
-
-  .tabs{
-    padding:0 12px;
-  }
-
-  .page-wrap{
-    padding:0 12px 18px;
-  }
-
-  .grid-4{
-    grid-template-columns:1fr;
-  }
-
-  .result-grid{
-    grid-template-columns:1fr;
-  }
-
-  .tab{
-    flex:1;
-    padding:0 10px;
-  }
-
-  .table-wrap{
-    max-height:68vh;
-  }
-
 }
