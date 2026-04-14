@@ -21,23 +21,20 @@ function normalizeProducts() {
   STORE.normalized.products = rows
     .map(row => ({
       styleId: cleanStyleId(
-        row.style_id ||
-        row.styleid
+        row.style_id || row.styleid
       ),
 
       launchDate: text(row.launch_date),
       liveDate: text(row.live_date),
 
       erpSku: text(
-        row.erp_sku ||
-        row.sku
+        row.erp_sku || row.sku
       ),
 
       brand: text(row.brand),
 
       articleType: text(
-        row.article_type ||
-        row.article
+        row.article_type || row.article
       ),
 
       status: text(row.status),
@@ -46,7 +43,8 @@ function normalizeProducts() {
       tp: num(row.tp)
     }))
     .filter(item =>
-      isValidStyle(item.styleId)
+      item.styleId &&
+      item.styleId !== "0"
     );
 }
 
@@ -112,10 +110,10 @@ function buildRtvMap() {
   const orderCount = {};
   const returnCount = {};
 
+  /* Orders */
   orders.forEach(row => {
     const styleId = cleanStyleId(
-      row.style_id ||
-      row.styleid
+      row.style_id || row.styleid
     );
 
     const orderLine = text(
@@ -123,7 +121,7 @@ function buildRtvMap() {
       row.orderlineid
     );
 
-    if (!isValidStyle(styleId)) return;
+    if (!styleId || styleId === "0") return;
 
     orderCount[styleId] =
       (orderCount[styleId] || 0) + 1;
@@ -133,6 +131,7 @@ function buildRtvMap() {
     }
   });
 
+  /* Returns */
   returnsData.forEach(row => {
     const orderLine = text(
       row.order_line_id ||
@@ -153,14 +152,14 @@ function buildRtvMap() {
   const rtvMap = {};
 
   Object.keys(orderCount).forEach(id => {
-    const o = orderCount[id] || 0;
-    const r = returnCount[id] || 0;
+    const ord = orderCount[id] || 0;
+    const ret = returnCount[id] || 0;
 
     let pct =
       CONFIG.COSTS.DEFAULT_RTV_PERCENT;
 
-    if (o > 0) {
-      pct = (r / o) * 100;
+    if (ord > 0) {
+      pct = (ret / ord) * 100;
     }
 
     rtvMap[id] = round2(pct);
@@ -173,26 +172,31 @@ function buildRtvMap() {
    LOOKUPS
 -----------------------------------*/
 export function getProductByStyle(styleId) {
-  const id = cleanStyleId(styleId);
+  const key = cleanStyleId(styleId);
 
-  return STORE.normalized.products.find(
-    x => x.styleId === id
-  ) || null;
+  return (
+    STORE.normalized.products.find(
+      x => x.styleId === key
+    ) || null
+  );
 }
 
 export function getProductBySku(sku) {
   const key = text(sku).toLowerCase();
 
-  return STORE.normalized.products.find(
-    x => x.erpSku.toLowerCase() === key
-  ) || null;
+  return (
+    STORE.normalized.products.find(
+      x =>
+        x.erpSku.toLowerCase() === key
+    ) || null
+  );
 }
 
 export function getRtv(styleId) {
-  const id = cleanStyleId(styleId);
+  const key = cleanStyleId(styleId);
 
   return (
-    STORE.normalized.rtvMap[id] ??
+    STORE.normalized.rtvMap[key] ??
     CONFIG.COSTS.DEFAULT_RTV_PERCENT
   );
 }
@@ -206,13 +210,15 @@ export function findCommercial(
   const a = text(articleType).toLowerCase();
   const sp = num(sellerPrice);
 
-  return STORE.normalized.commercials.find(
-    row =>
-      row.brand === b &&
-      row.articleType === a &&
-      sp >= row.lower &&
-      sp <= row.upper
-  ) || null;
+  return (
+    STORE.normalized.commercials.find(
+      row =>
+        row.brand === b &&
+        row.articleType === a &&
+        sp >= row.lower &&
+        sp <= row.upper
+    ) || null
+  );
 }
 
 export function findGta(
@@ -226,14 +232,16 @@ export function findGta(
   const l = text(level).toLowerCase();
   const sp = num(customerSp);
 
-  return STORE.normalized.gta.find(
-    row =>
-      row.brand === b &&
-      row.articleType === a &&
-      row.level === l &&
-      sp >= row.lower &&
-      sp <= row.upper
-  ) || null;
+  return (
+    STORE.normalized.gta.find(
+      row =>
+        row.brand === b &&
+        row.articleType === a &&
+        row.level === l &&
+        sp >= row.lower &&
+        sp <= row.upper
+    ) || null
+  );
 }
 
 /* ----------------------------------
@@ -241,14 +249,8 @@ export function findGta(
 -----------------------------------*/
 function cleanStyleId(v) {
   return String(v || "")
-    .replace(/[^0-9]/g, "")
+    .replace(/\.0$/, "")
     .trim();
-}
-
-function isValidStyle(v) {
-  if (!v) return false;
-  if (v === "0") return false;
-  return Number(v) > 0;
 }
 
 function round2(v) {
