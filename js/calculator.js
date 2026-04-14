@@ -38,6 +38,11 @@ function bindSearch() {
       "clearCalcBtn"
     );
 
+  const input =
+    document.getElementById(
+      "calcStyleId"
+    );
+
   btn?.addEventListener(
     "click",
     runCalculation
@@ -47,17 +52,21 @@ function bindSearch() {
     "click",
     clearSearch
   );
+
+  input?.addEventListener(
+    "keydown",
+    e => {
+      if (e.key === "Enter") {
+        runCalculation();
+      }
+    }
+  );
 }
 
 export function runCalculation() {
-  const style =
+  const query =
     document.getElementById(
       "calcStyleId"
-    )?.value.trim();
-
-  const sku =
-    document.getElementById(
-      "calcSku"
     )?.value.trim();
 
   const target =
@@ -67,16 +76,29 @@ export function runCalculation() {
       )?.value || 5
     );
 
-  let product = null;
-
-  if (style) {
-    product =
-      getProductByStyle(style);
+  if (!query) {
+    renderSearch(
+      "Enter Style ID or ERP SKU."
+    );
+    return;
   }
 
-  if (!product && sku) {
+  let product = null;
+
+  /* numeric = style id */
+  if (/^\d+$/.test(query)) {
     product =
-      getProductBySku(sku);
+      getProductByStyle(
+        query
+      );
+  }
+
+  /* fallback sku */
+  if (!product) {
+    product =
+      getProductBySku(
+        query
+      );
   }
 
   if (!product) {
@@ -99,7 +121,6 @@ export function runCalculation() {
     return;
   }
 
-  /* FORCE preserve text fields */
   r.erpSku =
     product.erpSku || "";
 
@@ -121,18 +142,12 @@ export function runCalculation() {
 }
 
 function clearSearch() {
-  const a =
+  const el =
     document.getElementById(
       "calcStyleId"
     );
 
-  const b =
-    document.getElementById(
-      "calcSku"
-    );
-
-  if (a) a.value = "";
-  if (b) b.value = "";
+  if (el) el.value = "";
 
   renderSearch(
     "Search style and view pricing."
@@ -325,7 +340,7 @@ function renderManualBlock(
 }
 
 /* ----------------------------------
-   RESULT HTML
+   HTML
 -----------------------------------*/
 function fullResultHtml(
   r,
@@ -352,16 +367,12 @@ function fullResultHtml(
 
       <div class="result-box">
         <div class="result-label">SP</div>
-        <div class="result-value">
-          ₹${money(r.sp)}
-        </div>
+        <div class="result-value">₹${money(r.sp)}</div>
       </div>
 
       <div class="result-box">
         <div class="result-label">TP</div>
-        <div class="result-value">
-          ₹${money(r.tp)}
-        </div>
+        <div class="result-value">₹${money(r.tp)}</div>
       </div>
 
       <div class="result-box">
@@ -386,28 +397,21 @@ function fullResultHtml(
 
       ${line("GT Charge", r.gta)}
       ${line("List Price", r.listPrice)}
-
       ${line("Commission %", r.commissionPct)}
       ${line("Commission Rs", r.commissionRs)}
       ${line("Fixed Fee", r.fixedFee)}
       ${line("Tax", r.taxOnComFixed)}
-
       ${line("Upload Settlement", r.uploadSettlement)}
       ${line("TDS + TCS", r.tdsTcs)}
       ${line("Bank Settlement", r.bankSettlement)}
-
       ${line("Royalty", r.royalty)}
       ${line("Marketing", r.marketing)}
-
       ${line("Payout Before CODB", r.payoutBeforeCodb)}
-
       ${line("Dispatch", r.dispatchCost)}
       ${line("Return Charge", r.returnCharge)}
       ${line("Return Cost", r.returnCost)}
-
       ${line("RTV %", r.rtvPct)}
       ${line("RTV CODB", r.rtvCodb)}
-
       ${line("Payout After CODB", r.payoutAfterCodb)}
 
     </div>
