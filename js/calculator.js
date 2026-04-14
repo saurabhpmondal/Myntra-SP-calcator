@@ -5,47 +5,33 @@ import {
   getProductByStyle,
   getProductBySku
 } from "./normalizer.js";
+
 import {
-  solvePrice
+  solvePrice,
+  evaluatePrice
 } from "./pricing-engine.js";
 
 /* ----------------------------------
    INIT
 -----------------------------------*/
 export function initCalculator() {
-  bindEvents();
+  bindSearchEvents();
+  bindManualEvents();
 }
 
-
 /* ----------------------------------
-   EVENTS
+   SEARCH TAB
 -----------------------------------*/
-function bindEvents() {
-  const calcBtn = document.getElementById("calcBtn");
-  const clearBtn = document.getElementById("clearCalcBtn");
+function bindSearchEvents() {
+  const btn = document.getElementById("calcBtn");
+  const clr = document.getElementById("clearCalcBtn");
 
-  const styleInput = document.getElementById("calcStyleId");
-  const skuInput = document.getElementById("calcSku");
-
-  calcBtn?.addEventListener("click", runCalculation);
-
-  clearBtn?.addEventListener("click", clearCalculator);
-
-  styleInput?.addEventListener("keydown", e => {
-    if (e.key === "Enter") runCalculation();
-  });
-
-  skuInput?.addEventListener("keydown", e => {
-    if (e.key === "Enter") runCalculation();
-  });
+  btn?.addEventListener("click", runCalculation);
+  clr?.addEventListener("click", clearSearch);
 }
 
-
-/* ----------------------------------
-   MAIN CALCULATION
------------------------------------*/
 export function runCalculation() {
-  const styleId =
+  const style =
     document.getElementById("calcStyleId")?.value.trim();
 
   const sku =
@@ -58,134 +44,241 @@ export function runCalculation() {
 
   let product = null;
 
-  if (styleId) {
-    product = getProductByStyle(styleId);
-  }
-
-  if (!product && sku) {
-    product = getProductBySku(sku);
-  }
+  if (style) product = getProductByStyle(style);
+  if (!product && sku) product = getProductBySku(sku);
 
   if (!product) {
-    renderMessage("Style / SKU not found.");
+    renderSearch("No style found");
     return;
   }
 
-  const result = solvePrice(product, target);
+  const r = solvePrice(product, target);
 
-  if (!result) {
-    renderMessage("Unable to solve price.");
+  if (!r) {
+    renderSearch("No solution found");
     return;
   }
 
-  renderResult(result);
-  showToast("Calculation done");
+  renderSearchBlock(r);
+  showToast("Search complete");
 }
 
+function renderSearch(msg) {
+  const el = document.getElementById("calcOutput");
+  if (el) el.innerHTML = `<div class="empty-box">${msg}</div>`;
+}
 
-/* ----------------------------------
-   RENDER RESULT
------------------------------------*/
-function renderResult(r) {
+function clearSearch() {
+  document.getElementById("calcStyleId").value = "";
+  document.getElementById("calcSku").value = "";
+  renderSearch("Search style and view pricing.");
+}
+
+function renderSearchBlock(r) {
   const el = document.getElementById("calcOutput");
 
   if (!el) return;
 
-  const profitClass =
-    r.tpProfitRs >= 0 ? "success" : "danger";
+  el.innerHTML = resultHtml(r);
+}
+
+/* ----------------------------------
+   MANUAL CALCULATOR TAB
+-----------------------------------*/
+function bindManualEvents() {
+  const mode = document.getElementById("manualMode");
+  const btn = document.getElementById("manualCalcBtn");
+
+  mode?.addEventListener("change", updateManualLabel);
+  btn?.addEventListener("click", runManualCalc);
+
+  updateManualLabel();
+}
+
+function updateManualLabel() {
+  const mode =
+    document.getElementById("manualMode")?.value;
+
+  const label =
+    document.getElementById("manualInputLabel");
+
+  if (!label) return;
+
+  label.textContent =
+    mode === "tp"
+      ? "TP Value"
+      : "SP Value";
+}
+
+function runManualCalc() {
+  const mode =
+    document.getElementById("manualMode")?.value;
+
+  const brand =
+    document.getElementById("manualBrand")?.value;
+
+  const val =
+    Number(
+      document.getElementById("manualInput")?.value || 0
+    );
+
+  if (!brand || !val) {
+    renderManual("Enter all inputs.");
+    return;
+  }
+
+  const dummyProduct = {
+    erpSku: "MANUAL",
+    styleId: "MANUAL",
+    brand: brand,
+    articleType: "Saree",
+    status: "Manual",
+    mrp: val * 3,
+    tp: mode === "tp" ? val : 0
+  };
+
+  let result = null;
+
+  if (mode === "tp") {
+    result = solvePrice(dummyProduct, 5);
+  } else {
+    result = evaluatePrice(dummyProduct, val);
+  }
+
+  if (!result) {
+    renderManual("No result found.");
+    return;
+  }
+
+  renderManualBlock(result, mode);
+  showToast("Calculated");
+}
+
+function renderManual(msg) {
+  const el = document.getElementById("manualOutput");
+  if (el) el.innerHTML = `<div class="empty-box">${msg}</div>`;
+}
+
+function renderManualBlock(r, mode) {
+  const el = document.getElementById("manualOutput");
+  if (!el) return;
+
+  let top = "";
+
+  if (mode === "tp") {
+    top = `
+      <div class="result-box">
+        <div class="result-label">Recommended SP</div>
+        <div class="result-value">
+          ₹${money(r.sp)}
+        </div>
+      </div>
+    `;
+  } else {
+    top = `
+      <div class="result-box">
+        <div class="result-label">Effective TP</div>
+        <div class="result-value">
+          ₹${money(r.payoutAfterCodb)}
+        </div>
+      </div>
+    `;
+  }
 
   el.innerHTML = `
     <div class="result-grid">
+      ${top}
 
       <div class="result-box">
-        <div class="result-label">Recommended SP</div>
-        <div class="result-value">₹${money(r.sp)}</div>
+        <div class="result-label">GT</div>
+        <div class="result-value">
+          ₹${money(r.gta)}
+        </div>
+      </div>
+
+      <div class="result-box">
+        <div class="result-label">List Price</div>
+        <div class="result-value">
+          ₹${money(r.listPrice)}
+        </div>
+      </div>
+
+      <div class="result-box">
+        <div class="result-label">Profit</div>
+        <div class="result-value">
+          ₹${money(r.tpProfitRs)}
+        </div>
+      </div>
+    </div>
+
+    <div class="breakdown">
+      ${line("SP", r.sp)}
+      ${line("TP", r.tp)}
+      ${line("Upload Settlement", r.uploadSettlement)}
+      ${line("Bank Settlement", r.bankSettlement)}
+      ${line("Royalty", r.royalty)}
+      ${line("Marketing", r.marketing)}
+      ${line("Dispatch", r.dispatchCost)}
+      ${line("RTV CODB", r.rtvCodb)}
+      ${line("Payout After CODB", r.payoutAfterCodb)}
+    </div>
+  `;
+}
+
+/* ----------------------------------
+   COMMON HTML
+-----------------------------------*/
+function resultHtml(r) {
+  return `
+    <div class="result-grid">
+
+      <div class="result-box">
+        <div class="result-label">SP</div>
+        <div class="result-value">
+          ₹${money(r.sp)}
+        </div>
       </div>
 
       <div class="result-box">
         <div class="result-label">TP</div>
-        <div class="result-value">₹${money(r.tp)}</div>
+        <div class="result-value">
+          ₹${money(r.tp)}
+        </div>
       </div>
 
       <div class="result-box">
-        <div class="result-label">Payout After CODB</div>
-        <div class="result-value">₹${money(r.payoutAfterCodb)}</div>
-      </div>
-
-      <div class="result-box">
-        <div class="result-label">TP Profit</div>
-        <div class="result-value ${profitClass}">
+        <div class="result-label">Profit</div>
+        <div class="result-value">
           ₹${money(r.tpProfitRs)}
+        </div>
+      </div>
+
+      <div class="result-box">
+        <div class="result-label">RTV%</div>
+        <div class="result-value">
+          ${money(r.rtvPct)}%
         </div>
       </div>
 
     </div>
 
     <div class="breakdown">
-
-      ${row("ERP SKU", r.erpSku)}
-      ${row("Style ID", r.styleId)}
-      ${row("Brand", r.brand)}
-      ${row("Article", r.articleType)}
-      ${row("MRP", money(r.mrp))}
-      ${row("GT Charge", money(r.gta))}
-      ${row("List Price", money(r.listPrice))}
-
-      ${row("Commission %", money(r.commissionPct) + "%")}
-      ${row("Commission Rs", money(r.commissionRs))}
-      ${row("Fixed Fee", money(r.fixedFee))}
-      ${row("Tax on Com + Fixed", money(r.taxOnComFixed))}
-
-      ${row("Upload Settlement", money(r.uploadSettlement))}
-      ${row("TDS + TCS", money(r.tdsTcs))}
-      ${row("Bank Settlement", money(r.bankSettlement))}
-
-      ${row("Royalty", money(r.royalty))}
-      ${row("Marketing", money(r.marketing))}
-      ${row("Payout Before CODB", money(r.payoutBeforeCodb))}
-
-      ${row("Dispatch Cost", money(r.dispatchCost))}
-      ${row("Return Charge", money(r.returnCharge))}
-      ${row("Return Cost", money(r.returnCost))}
-      ${row("RTV %", money(r.rtvPct) + "%")}
-      ${row("RTV CODB", money(r.rtvCodb))}
-
-      ${row("Payout After CODB", money(r.payoutAfterCodb))}
-      ${row("TP Profit %", money(r.tpProfitPct) + "%")}
-
+      ${line("GT", r.gta)}
+      ${line("List Price", r.listPrice)}
+      ${line("Upload", r.uploadSettlement)}
+      ${line("Bank", r.bankSettlement)}
+      ${line("Dispatch", r.dispatchCost)}
+      ${line("RTV CODB", r.rtvCodb)}
+      ${line("Payout After", r.payoutAfterCodb)}
     </div>
   `;
 }
 
-
-/* ----------------------------------
-   HELPERS
------------------------------------*/
-function row(label, value) {
+function line(label, val) {
   return `
     <div class="break-row">
       <div>${label}</div>
-      <div class="right">${value}</div>
+      <div>${money(val)}</div>
     </div>
   `;
-}
-
-function renderMessage(text) {
-  const el = document.getElementById("calcOutput");
-
-  if (!el) return;
-
-  el.innerHTML = `
-    <div class="empty-box">${text}</div>
-  `;
-}
-
-function clearCalculator() {
-  const styleEl = document.getElementById("calcStyleId");
-  const skuEl = document.getElementById("calcSku");
-
-  if (styleEl) styleEl.value = "";
-  if (skuEl) skuEl.value = "";
-
-  renderMessage("Search a style and click Calculate.");
 }
