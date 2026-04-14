@@ -19,23 +19,37 @@
 
     <div>
       <h1 class="app-title">Myntra Reverse Pricing</h1>
-      <div class="sub-title">TP Based Smart Price Engine</div>
+      <div class="sub-title">
+        TP Based Smart Price Engine
+      </div>
     </div>
   </div>
 
   <div class="top-actions">
-    <button id="refreshBtn" class="btn btn-dark">
+    <button
+      id="refreshBtn"
+      class="btn btn-dark"
+    >
       Refresh Data
     </button>
   </div>
 </header>
 
 <section class="status-strip">
-  <div class="pill" id="loadStatus">Waiting...</div>
-  <div class="pill" id="recordStatus">0 Styles</div>
-  <div class="pill" id="timeStatus">--</div>
+  <div class="pill" id="loadStatus">
+    Waiting...
+  </div>
+
+  <div class="pill" id="recordStatus">
+    0 Styles
+  </div>
+
+  <div class="pill" id="timeStatus">
+    --
+  </div>
 </section>
 
+<!-- TOP FILTERS -->
 <section class="control-panel">
 
   <div class="control-item">
@@ -53,34 +67,32 @@
   <div class="control-item">
     <label>Brand</label>
     <select id="brandFilter">
-      <option value="">All Brands</option>
+      <option value="">
+        All Brands
+      </option>
     </select>
-  </div>
-
-  <div class="control-item grow">
-    <label>Search SKU / Style / Brand</label>
-    <input
-      type="text"
-      id="globalSearch"
-      placeholder="Type here..."
-    >
   </div>
 
   <div class="control-item">
     <label>&nbsp;</label>
-    <button id="exportBtn" class="btn">
+    <button
+      id="exportBtn"
+      class="btn"
+    >
       Export CSV
     </button>
   </div>
 
 </section>
 
+<!-- TABS -->
 <section class="tabs">
+
   <button
     class="tab active"
-    data-tab="calculator"
+    data-tab="search"
   >
-    Calculator
+    Search
   </button>
 
   <button
@@ -89,19 +101,27 @@
   >
     Pricing Master
   </button>
+
+  <button
+    class="tab"
+    data-tab="calculator"
+  >
+    Calculator
+  </button>
+
 </section>
 
 <main class="page-wrap">
 
-  <!-- CALCULATOR -->
+  <!-- SEARCH TAB -->
   <section
-    id="calculatorTab"
+    id="searchTab"
     class="tab-panel active"
   >
 
     <div class="card">
       <div class="card-title">
-        Single Style Calculator
+        Search Style / SKU
       </div>
 
       <div class="grid-4">
@@ -120,7 +140,7 @@
           <input
             type="text"
             id="calcSku"
-            placeholder="Optional"
+            placeholder="Enter ERP SKU"
           >
         </div>
 
@@ -130,7 +150,7 @@
             id="calcBtn"
             class="btn btn-dark full"
           >
-            Calculate
+            Search
           </button>
         </div>
 
@@ -149,20 +169,20 @@
 
     <div class="card">
       <div class="card-title">
-        Calculation Result
+        Result
       </div>
 
       <div
         id="calcOutput"
         class="empty-box"
       >
-        Search a style and click Calculate.
+        Search style and view pricing.
       </div>
     </div>
 
   </section>
 
-  <!-- MASTER -->
+  <!-- PRICING MASTER -->
   <section
     id="masterTab"
     class="tab-panel"
@@ -179,6 +199,99 @@
           <tbody id="pricingBody"></tbody>
         </table>
       </div>
+
+      <div style="margin-top:12px">
+        <button
+          id="loadMoreBtn"
+          class="btn full"
+        >
+          Load More 50 Rows
+        </button>
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- CALCULATOR -->
+  <section
+    id="calculatorTab"
+    class="tab-panel"
+  >
+
+    <div class="card">
+      <div class="card-title">
+        Manual Calculator
+      </div>
+
+      <div class="grid-4">
+
+        <div>
+          <label>Mode</label>
+          <select id="manualMode">
+            <option value="tp">
+              TP → Calculate SP
+            </option>
+            <option value="sp">
+              SP → Check TP
+            </option>
+          </select>
+        </div>
+
+        <div>
+          <label>Brand</label>
+          <select id="manualBrand">
+            <option value="">
+              Select Brand
+            </option>
+          </select>
+        </div>
+
+        <div>
+          <label>Article</label>
+          <select id="manualArticle">
+            <option value="Saree">
+              Saree
+            </option>
+          </select>
+        </div>
+
+        <div>
+          <label id="manualInputLabel">
+            TP Value
+          </label>
+
+          <input
+            type="number"
+            id="manualInput"
+            placeholder="Enter value"
+          >
+        </div>
+
+      </div>
+
+      <div style="margin-top:12px">
+        <button
+          id="manualCalcBtn"
+          class="btn btn-dark full"
+        >
+          Calculate
+        </button>
+      </div>
+
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        Calculator Result
+      </div>
+
+      <div
+        id="manualOutput"
+        class="empty-box"
+      >
+        Select mode and calculate.
+      </div>
     </div>
 
   </section>
@@ -187,7 +300,10 @@
 
 <div id="toast" class="toast"></div>
 
-<script type="module" src="js/main.js"></script>
+<script
+  type="module"
+  src="js/main.js"
+></script>
 
 </body>
 </html>
