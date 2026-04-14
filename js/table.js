@@ -28,27 +28,17 @@ function bindEvents() {
   const more =
     document.getElementById("loadMoreBtn");
 
-  target?.addEventListener(
-    "change",
-    resetAndRender
-  );
+  target?.addEventListener("change", resetAndRender);
+  brand?.addEventListener("change", resetAndRender);
 
-  brand?.addEventListener(
-    "change",
-    resetAndRender
-  );
-
-  more?.addEventListener(
-    "click",
-    () => {
-      visibleCount += 50;
-      renderPricingTable();
-    }
-  );
+  more?.addEventListener("click", () => {
+    visibleCount += 50;
+    renderPricingTable();
+  });
 }
 
 /* ----------------------------------
-   BRAND FILTER
+   FILTERS
 -----------------------------------*/
 export function fillBrandFilter() {
   const top =
@@ -68,8 +58,7 @@ export function fillBrandFilter() {
   const html =
     `<option value="">All Brands</option>` +
     brands.map(
-      b =>
-        `<option value="${b}">${b}</option>`
+      b => `<option value="${b}">${b}</option>`
     ).join("");
 
   if (top) top.innerHTML = html;
@@ -78,8 +67,7 @@ export function fillBrandFilter() {
     manual.innerHTML =
       `<option value="">Select Brand</option>` +
       brands.map(
-        b =>
-          `<option value="${b}">${b}</option>`
+        b => `<option value="${b}">${b}</option>`
       ).join("");
   }
 }
@@ -93,7 +81,7 @@ function resetAndRender() {
 }
 
 /* ----------------------------------
-   TABLE
+   MAIN TABLE
 -----------------------------------*/
 export function renderPricingTable() {
   const head =
@@ -108,7 +96,6 @@ export function renderPricingTable() {
   if (!head || !body) return;
 
   const allRows = getVisibleRows();
-
   const rows =
     allRows.slice(0, visibleCount);
 
@@ -117,7 +104,7 @@ export function renderPricingTable() {
   if (!rows.length) {
     body.innerHTML = `
       <tr>
-        <td colspan="29" class="center">
+        <td colspan="28" class="center">
           No rows found
         </td>
       </tr>
@@ -182,7 +169,7 @@ export function getVisibleRows() {
 }
 
 /* ----------------------------------
-   FULL HEADER
+   HEADER
 -----------------------------------*/
 function headerHtml() {
   return `
@@ -205,7 +192,6 @@ function headerHtml() {
       <th>Bank</th>
       <th>Royalty</th>
       <th>Marketing</th>
-      <th>Rebate</th>
       <th>Payout Before</th>
       <th>Dispatch</th>
       <th>Return Chg</th>
@@ -221,7 +207,7 @@ function headerHtml() {
 }
 
 /* ----------------------------------
-   FULL ROW
+   ROW
 -----------------------------------*/
 function rowHtml(r) {
   const cls =
@@ -253,7 +239,6 @@ function rowHtml(r) {
 
       <td>${money(r.royalty)}</td>
       <td>${money(r.marketing)}</td>
-      <td>${money(r.rebate)}</td>
 
       <td>${money(r.payoutBeforeCodb)}</td>
 
