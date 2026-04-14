@@ -10,6 +10,8 @@ import {
 /* ----------------------------------
    PUBLIC
 -----------------------------------*/
+
+/* Reverse solve SP from TP target */
 export function solvePrice(
   product,
   targetPct = 5
@@ -24,25 +26,17 @@ export function solvePrice(
     seed <= CONFIG.LIMITS.MAX_SP_SEARCH;
     seed++
   ) {
-    const sp =
-      roundToNext9(seed);
+    const sp = roundToNext9(seed);
 
     const calc =
-      evaluatePrice(
-        product,
-        sp
-      );
+      evaluatePrice(product, sp);
 
     if (
       calc.payoutAfterCodb >=
       targetValue
     ) {
-      calc.targetPct =
-        targetPct;
-
-      calc.targetValue =
-        targetValue;
-
+      calc.targetPct = targetPct;
+      calc.targetValue = targetValue;
       return calc;
     }
 
@@ -52,19 +46,39 @@ export function solvePrice(
   return null;
 }
 
+/* Evaluate known SP */
 export function evaluatePrice(
   product,
   sp
 ) {
-  const tp =
-    num(product.tp);
+  const tp = num(product.tp);
 
   const rtvPct =
     getRtv(product.styleId);
 
-  /* pass 1 */
-  let sellerPrice = sp;
+  /* -------------------------------
+     STEP 1 : GTA from SP
+  --------------------------------*/
+  let gta = 0;
+  let level = "default";
 
+  const gtaPass =
+    findGta(
+      product.brand,
+      product.articleType,
+      level,
+      sp
+    );
+
+  if (gtaPass) {
+    gta = num(gtaPass.gtaCharges);
+  }
+
+  let sellerPrice = sp - gta;
+
+  /* -------------------------------
+     STEP 2 : Commercial lookup on seller price
+  --------------------------------*/
   let comm =
     findCommercial(
       product.brand,
@@ -72,25 +86,23 @@ export function evaluatePrice(
       sellerPrice
     ) || defaultCommercial();
 
-  let gtaRow =
+  level = comm.level || "default";
+
+  /* Re-run GTA with correct level */
+  const gtaFinal =
     findGta(
       product.brand,
       product.articleType,
-      comm.level,
+      level,
       sp
     );
 
-  const gta =
-    gtaRow
-      ? num(
-          gtaRow.gtaCharges
-        )
-      : 0;
+  if (gtaFinal) {
+    gta = num(gtaFinal.gtaCharges);
+    sellerPrice = sp - gta;
+  }
 
-  sellerPrice =
-    sp - gta;
-
-  /* pass 2 */
+  /* Re-run commercial after final seller price */
   comm =
     findCommercial(
       product.brand,
@@ -98,6 +110,9 @@ export function evaluatePrice(
       sellerPrice
     ) || comm;
 
+  /* -------------------------------
+     CHARGES
+  --------------------------------*/
   const commissionPct =
     num(comm.commission);
 
@@ -124,8 +139,7 @@ export function evaluatePrice(
 
   const taxOnComFixed =
     gstBase *
-    CONFIG.TAX.GST_PERCENT /
-    100;
+    CONFIG.TAX.GST_PERCENT / 100;
 
   const uploadSettlement =
     sellerPrice
@@ -136,28 +150,22 @@ export function evaluatePrice(
 
   const tds =
     uploadSettlement *
-    CONFIG.TAX.TDS_PERCENT /
-    100;
+    CONFIG.TAX.TDS_PERCENT / 100;
 
   const tcs =
     uploadSettlement *
-    CONFIG.TAX.TCS_PERCENT /
-    100;
+    CONFIG.TAX.TCS_PERCENT / 100;
 
-  const tdsTcs =
-    tds + tcs;
+  const tdsTcs = tds + tcs;
 
   const bankSettlement =
-    uploadSettlement -
-    tdsTcs;
+    uploadSettlement - tdsTcs;
 
   const royalty =
-    sp *
-    royaltyPct / 100;
+    sp * royaltyPct / 100;
 
   const marketing =
-    sp *
-    marketingPct / 100;
+    sp * marketingPct / 100;
 
   const rebate = 0;
 
@@ -167,6 +175,9 @@ export function evaluatePrice(
     - marketing
     - rebate;
 
+  /* -------------------------------
+     CODB
+  --------------------------------*/
   const dispatchCost =
     getDispatchCost(sp);
 
@@ -174,24 +185,15 @@ export function evaluatePrice(
     CONFIG.COSTS.RETURN_CHARGE;
 
   const returnCost =
-    (fixedFee +
-      returnCharge) *
-    (1 +
-      CONFIG.TAX.GST_PERCENT /
-        100);
+    (fixedFee + returnCharge) *
+    (1 + CONFIG.TAX.GST_PERCENT / 100);
 
-  const rawRtv =
-    (
-      returnCost *
-      rtvPct
-    ) /
+  const rawRtvCodb =
+    (returnCost * rtvPct) /
     (100 - rtvPct);
 
   const rtvCodb =
-    Math.min(
-      rawRtv,
-      returnCost
-    );
+    Math.min(rawRtvCodb, returnCost);
 
   const payoutAfterCodb =
     payoutBeforeCodb
@@ -199,36 +201,26 @@ export function evaluatePrice(
     - rtvCodb;
 
   const tpProfitRs =
-    payoutAfterCodb -
-    tp;
+    payoutAfterCodb - tp;
 
   const tpProfitPct =
     tp > 0
-      ? (
-          tpProfitRs / tp
-        ) * 100
+      ? (tpProfitRs / tp) * 100
       : 0;
 
   return {
-    erpSku:
-      product.erpSku,
-    styleId:
-      product.styleId,
-    brand:
-      product.brand,
-    articleType:
-      product.articleType,
-    status:
-      product.status,
+    erpSku: product.erpSku,
+    styleId: product.styleId,
+    brand: product.brand,
+    articleType: product.articleType,
+    status: product.status,
 
-    mrp:
-      num(product.mrp),
+    mrp: num(product.mrp),
     tp,
 
     sp,
     gta,
-    listPrice:
-      sellerPrice,
+    listPrice: sellerPrice,
 
     commissionPct,
     commissionRs,
@@ -269,16 +261,11 @@ function getDispatchCost(sp) {
 }
 
 function roundToNext9(v) {
-  const n =
-    Math.ceil(num(v));
-
+  const n = Math.ceil(num(v));
   const base =
-    Math.floor(n / 10) *
-      10 +
-    9;
+    Math.floor(n / 10) * 10 + 9;
 
-  if (base >= n)
-    return base;
+  if (base >= n) return base;
 
   return base + 10;
 }
