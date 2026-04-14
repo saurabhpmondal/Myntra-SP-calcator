@@ -1,129 +1,305 @@
 /* css/layout.css */
 
-/* ----------------------------------
-   TAB PANELS
------------------------------------*/
-.tab-panel {
-  display: none;
+.topbar{
+  position:sticky;
+  top:0;
+  z-index:30;
+  background:#ffffff;
+  border-bottom:1px solid #e8ebef;
+  padding:12px 14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
 }
 
-.tab-panel.active {
-  display: block;
+.brand-wrap{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-width:0;
 }
 
-/* ----------------------------------
-   TABLE WRAP
------------------------------------*/
-.table-wrap {
-  width: 100%;
-  overflow-x: auto;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+.logo-box{
+  width:42px;
+  height:42px;
+  border-radius:12px;
+  background:#111111;
+  color:#ffffff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:800;
+  font-size:20px;
+  flex-shrink:0;
 }
 
-/* ----------------------------------
-   TABLE BASE
------------------------------------*/
-table {
-  width: 100%;
-  min-width: 1400px;
-  border-collapse: collapse;
-  background: #ffffff;
+.app-title{
+  font-size:18px;
+  line-height:1.1;
 }
 
-th,
-td {
-  padding: 10px 12px;
-  white-space: nowrap;
-  border-bottom: 1px solid #ececec;
-  text-align: left;
-  font-size: 13px;
+.sub-title{
+  font-size:12px;
+  color:#6b7280;
+  margin-top:2px;
 }
 
-thead th {
-  position: sticky;
-  top: 0;
-  z-index: 5;
-  background: #111111;
-  color: #ffffff;
+.top-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
 }
 
-/* ----------------------------------
-   STICKY FIRST 2 COLUMNS
------------------------------------*/
+.status-strip{
+  padding:10px 14px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+
+.control-panel{
+  padding:0 14px 12px;
+  display:grid;
+  grid-template-columns:180px 1fr 110px;
+  gap:10px;
+  align-items:end;
+}
+
+.control-item{
+  min-width:0;
+}
+
+.control-item.grow{
+  width:100%;
+}
+
+.tabs{
+  padding:0 14px;
+  display:flex;
+  gap:8px;
+  margin-bottom:12px;
+  flex-wrap:wrap;
+}
+
+.tab{
+  height:42px;
+  padding:0 18px;
+  border-radius:12px 12px 0 0;
+  font-weight:700;
+  border:1px solid #e5e7eb;
+}
+
+.page-wrap{
+  padding:0 14px 20px;
+}
+
+.tab-panel{
+  display:none;
+}
+
+.tab-panel.active{
+  display:block;
+}
+
+.grid-4{
+  display:grid;
+  grid-template-columns:1fr 1fr 180px 140px;
+  gap:10px;
+  align-items:end;
+}
+
+.table-wrap{
+  overflow:auto;
+  max-height:72vh;
+  border:1px solid #edf0f2;
+  border-radius:12px;
+}
+
+/* header sticky */
+#pricingTable thead th{
+  position:sticky;
+  top:0;
+  z-index:5;
+}
+
+/* sticky first 2 columns */
 #pricingTable th:nth-child(1),
-#pricingTable td:nth-child(1) {
-  position: sticky;
-  left: 0;
-  z-index: 6;
-  background: #ffffff;
+#pricingTable td:nth-child(1){
+  position:sticky;
+  left:0;
+  z-index:4;
+  background:#ffffff;
 }
 
 #pricingTable th:nth-child(2),
-#pricingTable td:nth-child(2) {
-  position: sticky;
-  left: 140px;
-  z-index: 6;
-  background: #ffffff;
+#pricingTable td:nth-child(2){
+  position:sticky;
+  left:140px;
+  z-index:4;
+  background:#ffffff;
 }
 
 #pricingTable thead th:nth-child(1),
-#pricingTable thead th:nth-child(2) {
-  background: #111111;
-  color: #ffffff;
-  z-index: 8;
+#pricingTable thead th:nth-child(2){
+  z-index:8;
 }
 
-/* ----------------------------------
-   SUMMARY TABLE
------------------------------------*/
-#summaryTable {
-  min-width: 700px;
-}
-
-#summaryTable th,
-#summaryTable td {
-  text-align: left;
+/* brand summary */
+#summaryTable{
+  min-width:720px;
 }
 
 #summaryTable td:nth-child(n+2),
-#summaryTable th:nth-child(n+2) {
-  text-align: right;
+#summaryTable th:nth-child(n+2){
+  text-align:right;
 }
 
-/* ----------------------------------
-   HELPERS
------------------------------------*/
-.center {
-  text-align: center !important;
+.result-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
 }
 
-.success {
-  color: #14803c;
-  font-weight: 700;
+.result-box{
+  border:1px solid #edf0f2;
+  border-radius:12px;
+  padding:12px;
+  background:#fafafa;
 }
 
-.danger {
-  color: #c62828;
-  font-weight: 700;
+.result-label{
+  font-size:11px;
+  color:#6b7280;
+  text-transform:uppercase;
+  margin-bottom:6px;
 }
 
-/* ----------------------------------
-   MOBILE
------------------------------------*/
-@media (max-width: 768px) {
+.result-value{
+  font-size:18px;
+  font-weight:800;
+}
 
-  table {
-    font-size: 12px;
+.breakdown{
+  margin-top:12px;
+  border-top:1px dashed #e5e7eb;
+  padding-top:12px;
+}
+
+.break-row{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  padding:6px 0;
+  border-bottom:1px dashed #f0f1f3;
+  font-size:13px;
+}
+
+.break-row:last-child{
+  border-bottom:none;
+}
+
+.right{
+  text-align:right;
+}
+
+.center{
+  text-align:center;
+}
+
+.hide{
+  display:none !important;
+}
+
+/* loader states */
+#loadStatus.loading{
+  background:#fff1f0;
+  color:#d93025;
+  border:1px solid #ffd6d2;
+  animation:pulseLoader 1s infinite;
+}
+
+#loadStatus.success{
+  background:#edf9f0;
+  color:#14803c;
+  border:1px solid #ccefd7;
+}
+
+@keyframes pulseLoader{
+  0%{opacity:1}
+  50%{opacity:.45}
+  100%{opacity:1}
+}
+
+/* Tablet */
+@media (max-width:1024px){
+
+  .control-panel{
+    grid-template-columns:1fr 1fr;
   }
 
-  th,
-  td {
-    padding: 9px 10px;
+  .grid-4{
+    grid-template-columns:1fr 1fr;
+  }
+
+  .result-grid{
+    grid-template-columns:1fr 1fr;
+  }
+}
+
+/* Mobile */
+@media (max-width:768px){
+
+  .topbar{
+    padding:10px 12px;
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .top-actions{
+    width:100%;
+  }
+
+  .top-actions .btn{
+    width:100%;
+  }
+
+  .app-title{
+    font-size:16px;
+  }
+
+  .control-panel{
+    grid-template-columns:1fr;
+    padding:0 12px 12px;
+  }
+
+  .tabs{
+    padding:0 12px;
+  }
+
+  .page-wrap{
+    padding:0 12px 18px;
+  }
+
+  .grid-4{
+    grid-template-columns:1fr;
+  }
+
+  .result-grid{
+    grid-template-columns:1fr;
+  }
+
+  .tab{
+    flex:1;
+    padding:0 10px;
+  }
+
+  .table-wrap{
+    max-height:68vh;
   }
 
   #pricingTable th:nth-child(2),
-  #pricingTable td:nth-child(2) {
-    left: 125px;
+  #pricingTable td:nth-child(2){
+    left:125px;
   }
 }
