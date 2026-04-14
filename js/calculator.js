@@ -1,9 +1,11 @@
 // js/calculator.js
 
 import { money, showToast } from "./config.js";
+
 import {
   getProductByStyle,
-  getProductBySku
+  getProductBySku,
+  getBrandArticleType
 } from "./normalizer.js";
 
 import {
@@ -123,11 +125,14 @@ function renderSearchBlock(r) {
   if (!el) return;
 
   el.innerHTML =
-    fullResultHtml(r);
+    fullResultHtml(
+      r,
+      true
+    );
 }
 
 /* ----------------------------------
-   MANUAL TAB
+   MANUAL CALCULATOR
 -----------------------------------*/
 function bindManual() {
   const mode =
@@ -142,7 +147,7 @@ function bindManual() {
 
   mode?.addEventListener(
     "change",
-    updateManualLabel
+    updateLabel
   );
 
   btn?.addEventListener(
@@ -150,10 +155,10 @@ function bindManual() {
     runManualCalc
   );
 
-  updateManualLabel();
+  updateLabel();
 }
 
-function updateManualLabel() {
+function updateLabel() {
   const mode =
     document.getElementById(
       "manualMode"
@@ -197,11 +202,17 @@ function runManualCalc() {
     return;
   }
 
+  const articleType =
+    getBrandArticleType(
+      brand
+    );
+
   const product = {
     erpSku: "MANUAL",
     styleId: "999999999",
     brand: brand,
-    articleType: "Saree",
+    articleType:
+      articleType,
     status: "Manual",
     mrp: value * 3,
     tp:
@@ -214,7 +225,10 @@ function runManualCalc() {
 
   if (mode === "tp") {
     result =
-      solvePrice(product, 5);
+      solvePrice(
+        product,
+        5
+      );
   } else {
     result =
       evaluatePrice(
@@ -236,8 +250,13 @@ function runManualCalc() {
     return;
   }
 
-  renderManualBlock(result);
-  showToast("Calculated");
+  renderManualBlock(
+    result
+  );
+
+  showToast(
+    "Calculated"
+  );
 }
 
 function renderManual(msg) {
@@ -261,17 +280,34 @@ function renderManualBlock(r) {
   if (!el) return;
 
   el.innerHTML =
-    fullResultHtml(r);
+    fullResultHtml(
+      r,
+      false
+    );
 }
 
 /* ----------------------------------
-   FULL RESULT HTML
+   RESULT HTML
 -----------------------------------*/
-function fullResultHtml(r) {
+function fullResultHtml(
+  r,
+  isSearch
+) {
   const cls =
     r.tpProfitRs >= 0
       ? "success"
       : "danger";
+
+  let meta = "";
+
+  if (isSearch) {
+    meta = `
+      ${line("ERP SKU", r.erpSku)}
+      ${line("Style ID", r.styleId)}
+      ${line("Brand", r.brand)}
+      ${line("Article", r.articleType)}
+    `;
+  }
 
   return `
     <div class="result-grid">
@@ -308,13 +344,8 @@ function fullResultHtml(r) {
 
     <div class="breakdown">
 
-      ${line("ERP SKU", r.erpSku)}
-      ${line("Style ID", r.styleId)}
-      ${line("Brand", r.brand)}
-      ${line("Article", r.articleType)}
-      ${line("Status", r.status)}
+      ${meta}
 
-      ${line("MRP", r.mrp)}
       ${line("GT Charge", r.gta)}
       ${line("List Price", r.listPrice)}
 
@@ -329,7 +360,6 @@ function fullResultHtml(r) {
 
       ${line("Royalty", r.royalty)}
       ${line("Marketing", r.marketing)}
-      ${line("Rebate", r.rebate)}
 
       ${line("Payout Before CODB", r.payoutBeforeCodb)}
 
@@ -346,7 +376,10 @@ function fullResultHtml(r) {
   `;
 }
 
-function line(label, value) {
+function line(
+  label,
+  value
+) {
   return `
     <div class="break-row">
       <div>${label}</div>
