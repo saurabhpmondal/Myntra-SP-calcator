@@ -102,13 +102,28 @@ export const STORE = {
 --------------------------------*/
 
 export function money(value) {
-  const num = Number(value || 0);
-  return num.toFixed(2);
+  const n = Number(value || 0);
+  return n.toFixed(2);
 }
 
+/* FIXED: handles %, commas, spaces */
 export function num(value) {
-  if (value === null || value === undefined || value === "") return 0;
-  return Number(String(value).replace(/,/g, "").trim()) || 0;
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+    return 0;
+  }
+
+  const cleaned = String(value)
+    .replace(/,/g, "")
+    .replace(/%/g, "")
+    .trim();
+
+  const n = parseFloat(cleaned);
+
+  return isNaN(n) ? 0 : n;
 }
 
 export function text(value) {
@@ -117,22 +132,34 @@ export function text(value) {
 
 export function nowTime() {
   const d = new Date();
+
   return d.toLocaleTimeString([], {
     hour: "2-digit",
     minute: "2-digit"
   });
 }
 
-export function showToast(message = "Done") {
-  const el = document.getElementById("toast");
+export function showToast(
+  message = "Done"
+) {
+  const el =
+    document.getElementById(
+      "toast"
+    );
+
   if (!el) return;
 
   el.textContent = message;
   el.classList.add("show");
 
-  clearTimeout(window.__toastTimer);
+  clearTimeout(
+    window.__toastTimer
+  );
 
-  window.__toastTimer = setTimeout(() => {
-    el.classList.remove("show");
-  }, 1800);
+  window.__toastTimer =
+    setTimeout(() => {
+      el.classList.remove(
+        "show"
+      );
+    }, 1800);
 }
