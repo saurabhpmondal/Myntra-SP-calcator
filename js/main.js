@@ -5,8 +5,7 @@ import { loadAllData } from "./data-loader.js";
 import { normalizeAllData } from "./normalizer.js";
 
 import {
-  initCalculator,
-  runCalculation
+  initCalculator
 } from "./calculator.js";
 
 import {
@@ -20,14 +19,14 @@ import {
 } from "./export.js";
 
 /* ----------------------------------
-   APP BOOT
+   BOOT
 -----------------------------------*/
 document.addEventListener(
   "DOMContentLoaded",
-  initApp
+  bootApp
 );
 
-async function initApp() {
+async function bootApp() {
   bindGlobalEvents();
   initTabs();
 
@@ -39,13 +38,13 @@ async function initApp() {
 }
 
 /* ----------------------------------
-   REFRESH
+   LOAD DATA
 -----------------------------------*/
 async function refreshApp() {
   const ok = await loadAllData();
 
   if (!ok) {
-    showToast("Sheet load failed");
+    showToast("Failed to load data");
     return;
   }
 
@@ -81,13 +80,6 @@ function bindGlobalEvents() {
         Number(target.value || 5);
 
       renderPricingTable();
-
-      if (
-        STORE.ui.activeTab ===
-        "calculator"
-      ) {
-        runCalculation();
-      }
     }
   );
 }
@@ -112,7 +104,7 @@ function initTabs() {
 
         btn.classList.add("active");
 
-        switchTab(tab);
+        openTab(tab);
 
         STORE.ui.activeTab = tab;
 
@@ -124,24 +116,41 @@ function initTabs() {
   });
 }
 
-function switchTab(name) {
-  const calc =
-    document.getElementById(
-      "calculatorTab"
-    );
+function openTab(name) {
+  hideAllTabs();
 
-  const master =
-    document.getElementById(
-      "masterTab"
-    );
+  if (name === "search") {
+    show("searchTab");
+  }
 
-  calc?.classList.remove("active");
-  master?.classList.remove("active");
+  if (name === "master") {
+    show("masterTab");
+  }
 
   if (name === "calculator") {
-    calc?.classList.add("active");
+    show("calculatorTab");
+  }
+}
+
+function hideAllTabs() {
+  showHide("searchTab", false);
+  showHide("masterTab", false);
+  showHide("calculatorTab", false);
+}
+
+function show(id) {
+  showHide(id, true);
+}
+
+function showHide(id, state) {
+  const el = document.getElementById(id);
+
+  if (!el) return;
+
+  if (state) {
+    el.classList.add("active");
   } else {
-    master?.classList.add("active");
+    el.classList.remove("active");
   }
 }
 
