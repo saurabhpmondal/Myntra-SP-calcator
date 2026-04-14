@@ -1,0 +1,143 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Myntra Reverse Pricing Engine</title>
+<meta name="theme-color" content="#111111">
+
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/layout.css">
+</head>
+
+<body>
+
+<header class="topbar">
+  <div class="brand-wrap">
+    <div class="logo-box">M</div>
+    <div>
+      <h1 class="app-title">Myntra Reverse Pricing</h1>
+      <div class="sub-title">TP Based Smart Price Engine</div>
+    </div>
+  </div>
+
+  <div class="top-actions">
+    <button id="refreshBtn" class="btn btn-dark">Refresh Data</button>
+  </div>
+</header>
+
+<section class="status-strip">
+  <div class="pill" id="loadStatus">Waiting...</div>
+  <div class="pill" id="recordStatus">0 Styles</div>
+  <div class="pill" id="timeStatus">--</div>
+</section>
+
+<section class="control-panel">
+
+  <div class="control-item">
+    <label>Profit Target</label>
+    <select id="profitTarget">
+      <option value="10">TP +10%</option>
+      <option value="5" selected>TP +5%</option>
+      <option value="0">TP +0%</option>
+      <option value="-5">TP -5%</option>
+      <option value="-10">TP -10%</option>
+      <option value="-15">TP -15%</option>
+    </select>
+  </div>
+
+  <div class="control-item grow">
+    <label>Search SKU / Style / Brand</label>
+    <input type="text" id="globalSearch" placeholder="Type here...">
+  </div>
+
+  <div class="control-item">
+    <label>Rows</label>
+    <select id="rowLimit">
+      <option>50</option>
+      <option selected>100</option>
+      <option>250</option>
+      <option>500</option>
+      <option>1000</option>
+    </select>
+  </div>
+
+  <div class="control-item">
+    <label>&nbsp;</label>
+    <button id="exportBtn" class="btn">Export CSV</button>
+  </div>
+
+</section>
+
+<section class="tabs">
+  <button class="tab active" data-tab="calculator">Calculator</button>
+  <button class="tab" data-tab="master">Pricing Master</button>
+</section>
+
+<main class="page-wrap">
+
+  <!-- CALCULATOR -->
+  <section id="calculatorTab" class="tab-panel active">
+
+    <div class="card">
+      <div class="card-title">Single Style Calculator</div>
+
+      <div class="grid-4">
+        <div>
+          <label>Style ID</label>
+          <input type="text" id="calcStyleId" placeholder="Enter style id">
+        </div>
+
+        <div>
+          <label>ERP SKU</label>
+          <input type="text" id="calcSku" placeholder="Optional">
+        </div>
+
+        <div>
+          <label>&nbsp;</label>
+          <button id="calcBtn" class="btn btn-dark full">Calculate</button>
+        </div>
+
+        <div>
+          <label>&nbsp;</label>
+          <button id="clearCalcBtn" class="btn full">Clear</button>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="card">
+      <div class="card-title">Calculation Result</div>
+      <div id="calcOutput" class="empty-box">
+        Search a style and click Calculate.
+      </div>
+    </div>
+
+  </section>
+
+  <!-- MASTER -->
+  <section id="masterTab" class="tab-panel">
+
+    <div class="card">
+      <div class="card-title">Pricing Master</div>
+
+      <div class="table-wrap">
+        <table id="pricingTable">
+          <thead id="pricingHead"></thead>
+          <tbody id="pricingBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </section>
+
+</main>
+
+<div id="toast" class="toast"></div>
+
+<!-- JS Modules -->
+<script type="module" src="js/main.js"></script>
+
+</body>
+</html>
