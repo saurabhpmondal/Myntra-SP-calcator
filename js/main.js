@@ -1,171 +1,202 @@
 // js/main.js
 
-import { STORE, showToast } from "./config.js";
 import { loadAllData } from "./data-loader.js";
 import { normalizeAllData } from "./normalizer.js";
-
-import {
-  initCalculator
-} from "./calculator.js";
-
-import {
-  initTable,
-  renderPricingTable,
-  fillBrandFilter
-} from "./table.js";
-
-import {
-  initExport
-} from "./export.js";
+import { initCalculator } from "./calculator.js";
+import { renderPricingTable } from "./table.js";
+import { initExport } from "./export.js";
+import { STORE } from "./config.js";
+import { renderBrandSummary } from "./brand-summary.js";
 
 /* ----------------------------------
-   BOOT
+   INIT
 -----------------------------------*/
 document.addEventListener(
   "DOMContentLoaded",
-  bootApp
+  initApp
 );
 
-async function bootApp() {
-  bindGlobalEvents();
-  initTabs();
-
+async function initApp() {
+  bindTabs();
+  bindControls();
   initCalculator();
-  initTable();
   initExport();
 
   await refreshApp();
 }
 
 /* ----------------------------------
-   LOAD DATA
+   REFRESH
 -----------------------------------*/
 async function refreshApp() {
-  const ok = await loadAllData();
+  const ok =
+    await loadAllData();
 
-  if (!ok) {
-    showToast("Failed to load data");
-    return;
-  }
+  if (!ok) return;
 
   normalizeAllData();
 
-  fillBrandFilter();
-  updateCounts();
+  fillBrands();
+
+  STORE.ui.rowLimit = 50;
 
   renderPricingTable();
-
-  showToast("App ready");
+  renderBrandSummary();
 }
 
 /* ----------------------------------
-   GLOBAL EVENTS
+   CONTROLS
 -----------------------------------*/
-function bindGlobalEvents() {
-  const refreshBtn =
-    document.getElementById("refreshBtn");
+function bindControls() {
+  const refresh =
+    document.getElementById(
+      "refreshBtn"
+    );
+
+  const brand =
+    document.getElementById(
+      "brandFilter"
+    );
 
   const target =
-    document.getElementById("profitTarget");
+    document.getElementById(
+      "profitTarget"
+    );
 
-  refreshBtn?.addEventListener(
+  const loadMore =
+    document.getElementById(
+      "loadMoreBtn"
+    );
+
+  refresh?.addEventListener(
     "click",
     refreshApp
   );
 
+  brand?.addEventListener(
+    "change",
+    rerenderAll
+  );
+
   target?.addEventListener(
     "change",
-    () => {
-      STORE.ui.currentTarget =
-        Number(target.value || 5);
+    rerenderAll
+  );
 
+  loadMore?.addEventListener(
+    "click",
+    () => {
+      STORE.ui.rowLimit += 50;
       renderPricingTable();
     }
   );
 }
 
+function rerenderAll() {
+  STORE.ui.rowLimit = 50;
+
+  renderPricingTable();
+  renderBrandSummary();
+}
+
+/* ----------------------------------
+   BRAND FILTERS
+-----------------------------------*/
+function fillBrands() {
+  const brands = [
+    ...new Set(
+      STORE.normalized.products.map(
+        x => x.brand
+      )
+    )
+  ].sort();
+
+  const selects = [
+    document.getElementById(
+      "brandFilter"
+    ),
+    document.getElementById(
+      "manualBrand"
+    )
+  ];
+
+  selects.forEach(sel => {
+    if (!sel) return;
+
+    const first =
+      sel.id ===
+      "brandFilter"
+        ? `<option value="">All Brands</option>`
+        : `<option value="">Select Brand</option>`;
+
+    sel.innerHTML =
+      first +
+      brands
+        .map(
+          b =>
+            `<option value="${b}">${b}</option>`
+        )
+        .join("");
+  });
+}
+
 /* ----------------------------------
    TABS
 -----------------------------------*/
-function initTabs() {
+function bindTabs() {
   const tabs =
-    document.querySelectorAll(".tab");
+    document.querySelectorAll(
+      ".tab"
+    );
 
   tabs.forEach(btn => {
     btn.addEventListener(
       "click",
       () => {
-        const tab =
+        const key =
           btn.dataset.tab;
 
-        tabs.forEach(x =>
-          x.classList.remove("active")
+        document
+          .querySelectorAll(
+            ".tab"
+          )
+          .forEach(x =>
+            x.classList.remove(
+              "active"
+            )
+          );
+
+        document
+          .querySelectorAll(
+            ".tab-panel"
+          )
+          .forEach(x =>
+            x.classList.remove(
+              "active"
+            )
+          );
+
+        btn.classList.add(
+          "active"
         );
 
-        btn.classList.add("active");
+        document
+          .getElementById(
+            key + "Tab"
+          )
+          ?.classList.add(
+            "active"
+          );
 
-        openTab(tab);
+        STORE.ui.activeTab =
+          key;
 
-        STORE.ui.activeTab = tab;
-
-        if (tab === "master") {
-          renderPricingTable();
+        if (
+          key === "summary"
+        ) {
+          renderBrandSummary();
         }
       }
     );
   });
-}
-
-function openTab(name) {
-  hideAllTabs();
-
-  if (name === "search") {
-    show("searchTab");
-  }
-
-  if (name === "master") {
-    show("masterTab");
-  }
-
-  if (name === "calculator") {
-    show("calculatorTab");
-  }
-}
-
-function hideAllTabs() {
-  showHide("searchTab", false);
-  showHide("masterTab", false);
-  showHide("calculatorTab", false);
-}
-
-function show(id) {
-  showHide(id, true);
-}
-
-function showHide(id, state) {
-  const el = document.getElementById(id);
-
-  if (!el) return;
-
-  if (state) {
-    el.classList.add("active");
-  } else {
-    el.classList.remove("active");
-  }
-}
-
-/* ----------------------------------
-   STATUS
------------------------------------*/
-function updateCounts() {
-  const el =
-    document.getElementById(
-      "recordStatus"
-    );
-
-  if (!el) return;
-
-  el.textContent =
-    STORE.normalized.products.length +
-    " Styles";
 }
