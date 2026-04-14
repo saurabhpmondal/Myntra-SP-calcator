@@ -10,24 +10,39 @@ import {
 /* ----------------------------------
    PUBLIC
 -----------------------------------*/
-
-export function solvePrice(product, targetPct = 5) {
+export function solvePrice(
+  product,
+  targetPct = 5
+) {
   const tp = num(product.tp);
+
   const targetValue =
-    tp * (1 + num(targetPct) / 100);
+    tp * (1 + targetPct / 100);
 
   for (
     let seed = Math.max(99, Math.ceil(tp));
     seed <= CONFIG.LIMITS.MAX_SP_SEARCH;
     seed++
   ) {
-    const sp = roundToNext9(seed);
+    const sp =
+      roundToNext9(seed);
 
-    const calc = evaluatePrice(product, sp);
+    const calc =
+      evaluatePrice(
+        product,
+        sp
+      );
 
-    if (calc.payoutAfterCodb >= targetValue) {
-      calc.targetPct = targetPct;
-      calc.targetValue = targetValue;
+    if (
+      calc.payoutAfterCodb >=
+      targetValue
+    ) {
+      calc.targetPct =
+        targetPct;
+
+      calc.targetValue =
+        targetValue;
+
       return calc;
     }
 
@@ -37,10 +52,15 @@ export function solvePrice(product, targetPct = 5) {
   return null;
 }
 
+export function evaluatePrice(
+  product,
+  sp
+) {
+  const tp =
+    num(product.tp);
 
-export function evaluatePrice(product, sp) {
-  const tp = num(product.tp);
-  const rtvPct = getRtv(product.styleId);
+  const rtvPct =
+    getRtv(product.styleId);
 
   /* pass 1 */
   let sellerPrice = sp;
@@ -61,11 +81,16 @@ export function evaluatePrice(product, sp) {
     );
 
   const gta =
-    gtaRow ? num(gtaRow.gtaCharges) : 0;
+    gtaRow
+      ? num(
+          gtaRow.gtaCharges
+        )
+      : 0;
 
-  sellerPrice = sp - gta;
+  sellerPrice =
+    sp - gta;
 
-  /* final pass */
+  /* pass 2 */
   comm =
     findCommercial(
       product.brand,
@@ -88,7 +113,6 @@ export function evaluatePrice(product, sp) {
   const collectionFee =
     CONFIG.COSTS.COLLECTION_FEE;
 
-  /* seller side */
   const commissionRs =
     sellerPrice *
     commissionPct / 100;
@@ -100,7 +124,8 @@ export function evaluatePrice(product, sp) {
 
   const taxOnComFixed =
     gstBase *
-    CONFIG.TAX.GST_PERCENT / 100;
+    CONFIG.TAX.GST_PERCENT /
+    100;
 
   const uploadSettlement =
     sellerPrice
@@ -111,23 +136,28 @@ export function evaluatePrice(product, sp) {
 
   const tds =
     uploadSettlement *
-    CONFIG.TAX.TDS_PERCENT / 100;
+    CONFIG.TAX.TDS_PERCENT /
+    100;
 
   const tcs =
     uploadSettlement *
-    CONFIG.TAX.TCS_PERCENT / 100;
+    CONFIG.TAX.TCS_PERCENT /
+    100;
 
-  const tdsTcs = tds + tcs;
+  const tdsTcs =
+    tds + tcs;
 
   const bankSettlement =
-    uploadSettlement - tdsTcs;
+    uploadSettlement -
+    tdsTcs;
 
-  /* SP side */
   const royalty =
-    sp * royaltyPct / 100;
+    sp *
+    royaltyPct / 100;
 
   const marketing =
-    sp * marketingPct / 100;
+    sp *
+    marketingPct / 100;
 
   const rebate = 0;
 
@@ -144,16 +174,24 @@ export function evaluatePrice(product, sp) {
     CONFIG.COSTS.RETURN_CHARGE;
 
   const returnCost =
-    (fixedFee + returnCharge) *
-    (1 + CONFIG.TAX.GST_PERCENT / 100);
+    (fixedFee +
+      returnCharge) *
+    (1 +
+      CONFIG.TAX.GST_PERCENT /
+        100);
 
-  /* capped RTV CODB */
-  const rawRtvCodb =
-    (returnCost * rtvPct) /
+  const rawRtv =
+    (
+      returnCost *
+      rtvPct
+    ) /
     (100 - rtvPct);
 
   const rtvCodb =
-    Math.min(rawRtvCodb, returnCost);
+    Math.min(
+      rawRtv,
+      returnCost
+    );
 
   const payoutAfterCodb =
     payoutBeforeCodb
@@ -161,25 +199,36 @@ export function evaluatePrice(product, sp) {
     - rtvCodb;
 
   const tpProfitRs =
-    payoutAfterCodb - tp;
+    payoutAfterCodb -
+    tp;
 
   const tpProfitPct =
     tp > 0
-      ? (tpProfitRs / tp) * 100
+      ? (
+          tpProfitRs / tp
+        ) * 100
       : 0;
 
   return {
-    erpSku: product.erpSku,
-    styleId: product.styleId,
-    brand: product.brand,
-    articleType: product.articleType,
-    status: product.status,
-    mrp: num(product.mrp),
+    erpSku:
+      product.erpSku,
+    styleId:
+      product.styleId,
+    brand:
+      product.brand,
+    articleType:
+      product.articleType,
+    status:
+      product.status,
+
+    mrp:
+      num(product.mrp),
     tp,
 
     sp,
     gta,
-    listPrice: sellerPrice,
+    listPrice:
+      sellerPrice,
 
     commissionPct,
     commissionRs,
@@ -210,24 +259,26 @@ export function evaluatePrice(product, sp) {
   };
 }
 
-
 /* ----------------------------------
    HELPERS
 -----------------------------------*/
-
 function getDispatchCost(sp) {
   if (sp < 500) return 25;
   if (sp <= 1000) return 30;
   return 35;
 }
 
-function roundToNext9(value) {
-  const n = Math.ceil(num(value));
+function roundToNext9(v) {
+  const n =
+    Math.ceil(num(v));
 
   const base =
-    Math.floor(n / 10) * 10 + 9;
+    Math.floor(n / 10) *
+      10 +
+    9;
 
-  if (base >= n) return base;
+  if (base >= n)
+    return base;
 
   return base + 10;
 }
