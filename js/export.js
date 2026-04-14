@@ -7,16 +7,21 @@ import { getVisibleRows } from "./table.js";
    INIT
 -----------------------------------*/
 export function initExport() {
-  const btn = document.getElementById("exportBtn");
+  const btn =
+    document.getElementById("exportBtn");
 
-  btn?.addEventListener("click", exportVisibleTable);
+  btn?.addEventListener(
+    "click",
+    exportVisibleTable
+  );
 }
 
 /* ----------------------------------
-   EXPORT EXACT VISIBLE TABLE
+   EXPORT
 -----------------------------------*/
 function exportVisibleTable() {
-  const rows = getVisibleRows();
+  const rows =
+    getVisibleRows();
 
   if (!rows.length) {
     showToast("No data to export");
@@ -25,6 +30,7 @@ function exportVisibleTable() {
 
   const data = [];
 
+  /* Rebate removed */
   data.push([
     "ERP SKU",
     "Style ID",
@@ -44,7 +50,6 @@ function exportVisibleTable() {
     "Bank Settlement",
     "Royalty",
     "Marketing",
-    "Rebate",
     "Payout Before CODB",
     "Dispatch Cost",
     "Return Charge",
@@ -81,7 +86,6 @@ function exportVisibleTable() {
 
       fix(r.royalty),
       fix(r.marketing),
-      fix(r.rebate),
 
       fix(r.payoutBeforeCodb),
 
@@ -100,7 +104,10 @@ function exportVisibleTable() {
     ]);
   });
 
-  downloadCsv(toCsv(data), fileName());
+  downloadCsv(
+    toCsv(data),
+    fileName()
+  );
 
   showToast("CSV exported");
 }
@@ -109,19 +116,21 @@ function exportVisibleTable() {
    HELPERS
 -----------------------------------*/
 function fix(v) {
-  return Number(v || 0).toFixed(2);
+  return Number(v || 0)
+    .toFixed(2);
 }
 
 function toCsv(rows) {
   return rows
     .map(row =>
-      row.map(cell => esc(cell)).join(",")
+      row.map(esc).join(",")
     )
     .join("\n");
 }
 
 function esc(value) {
-  const text = String(value ?? "");
+  const text =
+    String(value ?? "");
 
   if (
     text.includes(",") ||
@@ -134,15 +143,24 @@ function esc(value) {
   return text;
 }
 
-function downloadCsv(content, file) {
+function downloadCsv(
+  content,
+  file
+) {
   const blob = new Blob(
     [content],
-    { type: "text/csv;charset=utf-8;" }
+    {
+      type:
+        "text/csv;charset=utf-8;"
+    }
   );
 
-  const url = URL.createObjectURL(blob);
+  const url =
+    URL.createObjectURL(blob);
 
-  const a = document.createElement("a");
+  const a =
+    document.createElement("a");
+
   a.href = url;
   a.download = file;
   a.click();
@@ -153,9 +171,18 @@ function downloadCsv(content, file) {
 function fileName() {
   const d = new Date();
 
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
+  const y =
+    d.getFullYear();
+
+  const m =
+    String(
+      d.getMonth() + 1
+    ).padStart(2, "0");
+
+  const day =
+    String(
+      d.getDate()
+    ).padStart(2, "0");
 
   return `myntra_pricing_master_${y}${m}${day}.csv`;
 }
