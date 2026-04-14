@@ -4,6 +4,11 @@ import { STORE, money, showToast } from "./config.js";
 import { solvePrice } from "./pricing-engine.js";
 
 /* ----------------------------------
+   STATE
+-----------------------------------*/
+let visibleCount = 50;
+
+/* ----------------------------------
    INIT
 -----------------------------------*/
 export function initTable() {
@@ -16,29 +21,55 @@ export function initTable() {
 function bindEvents() {
   const target = document.getElementById("profitTarget");
   const brand = document.getElementById("brandFilter");
-  const search = document.getElementById("globalSearch");
+  const more = document.getElementById("loadMoreBtn");
 
-  target?.addEventListener("change", renderPricingTable);
-  brand?.addEventListener("change", renderPricingTable);
-  search?.addEventListener("input", renderPricingTable);
+  target?.addEventListener("change", resetAndRender);
+  brand?.addEventListener("change", resetAndRender);
+
+  more?.addEventListener("click", () => {
+    visibleCount += 50;
+    renderPricingTable();
+  });
 }
 
 /* ----------------------------------
-   BRAND DROPDOWN
+   FILTER DROPDOWNS
 -----------------------------------*/
 export function fillBrandFilter() {
-  const el = document.getElementById("brandFilter");
-  if (!el) return;
+  const top = document.getElementById("brandFilter");
+  const manual = document.getElementById("manualBrand");
 
   const brands = [
     ...new Set(
-      STORE.normalized.products.map(x => x.brand).filter(Boolean)
+      STORE.normalized.products
+        .map(x => x.brand)
+        .filter(Boolean)
     )
   ].sort();
 
-  el.innerHTML =
+  const html =
     `<option value="">All Brands</option>` +
-    brands.map(b => `<option value="${b}">${b}</option>`).join("");
+    brands.map(
+      b => `<option value="${b}">${b}</option>`
+    ).join("");
+
+  if (top) top.innerHTML = html;
+
+  if (manual) {
+    manual.innerHTML =
+      `<option value="">Select Brand</option>` +
+      brands.map(
+        b => `<option value="${b}">${b}</option>`
+      ).join("");
+  }
+}
+
+/* ----------------------------------
+   RESET
+-----------------------------------*/
+function resetAndRender() {
+  visibleCount = 50;
+  renderPricingTable();
 }
 
 /* ----------------------------------
@@ -47,31 +78,45 @@ export function fillBrandFilter() {
 export function renderPricingTable() {
   const head = document.getElementById("pricingHead");
   const body = document.getElementById("pricingBody");
+  const more = document.getElementById("loadMoreBtn");
 
   if (!head || !body) return;
 
-  const rows = getVisibleRows();
+  const allRows = getVisibleRows();
+  const rows = allRows.slice(0, visibleCount);
 
   head.innerHTML = headerHtml();
 
   if (!rows.length) {
     body.innerHTML = `
       <tr>
-        <td colspan="29" class="center">
-          No records found
+        <td colspan="10" class="center">
+          No rows found
         </td>
       </tr>
     `;
+
+    if (more) more.style.display = "none";
     return;
   }
 
   body.innerHTML = rows.map(rowHtml).join("");
 
-  showToast("Pricing master updated");
+  if (more) {
+    more.style.display =
+      visibleCount >= allRows.length
+        ? "none"
+        : "block";
+
+    more.textContent =
+      `Load More 50 Rows (${rows.length}/${allRows.length})`;
+  }
+
+  showToast("Pricing updated");
 }
 
 /* ----------------------------------
-   VISIBLE ROWS
+   DATA SOURCE
 -----------------------------------*/
 export function getVisibleRows() {
   const target =
@@ -84,25 +129,11 @@ export function getVisibleRows() {
       document.getElementById("brandFilter")?.value || ""
     ).toLowerCase();
 
-  const search =
-    (
-      document.getElementById("globalSearch")?.value || ""
-    ).toLowerCase();
-
   let data = [...STORE.normalized.products];
 
   if (brand) {
     data = data.filter(
       x => x.brand.toLowerCase() === brand
-    );
-  }
-
-  if (search) {
-    data = data.filter(x =>
-      x.erpSku.toLowerCase().includes(search) ||
-      x.styleId.toLowerCase().includes(search) ||
-      x.brand.toLowerCase().includes(search) ||
-      x.articleType.toLowerCase().includes(search)
     );
   }
 
@@ -123,32 +154,13 @@ function headerHtml() {
   return `
     <tr>
       <th>ERP SKU</th>
-      <th>Style ID</th>
+      <th>Style</th>
       <th>Brand</th>
-      <th>Article</th>
-      <th>Status</th>
       <th>MRP</th>
+      <th>TP</th>
       <th>SP</th>
       <th>GT</th>
-      <th>List Price</th>
-      <th>Com %</th>
-      <th>Com Rs</th>
-      <th>Fixed</th>
-      <th>Tax</th>
-      <th>Upload</th>
-      <th>TDS+TCS</th>
-      <th>Bank</th>
-      <th>Royalty</th>
-      <th>Marketing</th>
-      <th>Rebate</th>
-      <th>Payout Before</th>
-      <th>Dispatch</th>
-      <th>Return Chg</th>
-      <th>Return Cost</th>
-      <th>RTV %</th>
-      <th>RTV CODB</th>
-      <th>Payout After</th>
-      <th>TP</th>
+      <th>Payout</th>
       <th>Profit Rs</th>
       <th>Profit %</th>
     </tr>
@@ -160,37 +172,20 @@ function headerHtml() {
 -----------------------------------*/
 function rowHtml(r) {
   const cls =
-    r.tpProfitRs >= 0 ? "success" : "danger";
+    r.tpProfitRs >= 0
+      ? "success"
+      : "danger";
 
   return `
     <tr>
       <td>${r.erpSku}</td>
       <td>${r.styleId}</td>
       <td>${r.brand}</td>
-      <td>${r.articleType}</td>
-      <td>${r.status}</td>
       <td>${money(r.mrp)}</td>
+      <td>${money(r.tp)}</td>
       <td><b>${money(r.sp)}</b></td>
       <td>${money(r.gta)}</td>
-      <td>${money(r.listPrice)}</td>
-      <td>${money(r.commissionPct)}</td>
-      <td>${money(r.commissionRs)}</td>
-      <td>${money(r.fixedFee)}</td>
-      <td>${money(r.taxOnComFixed)}</td>
-      <td>${money(r.uploadSettlement)}</td>
-      <td>${money(r.tdsTcs)}</td>
-      <td>${money(r.bankSettlement)}</td>
-      <td>${money(r.royalty)}</td>
-      <td>${money(r.marketing)}</td>
-      <td>${money(r.rebate)}</td>
-      <td>${money(r.payoutBeforeCodb)}</td>
-      <td>${money(r.dispatchCost)}</td>
-      <td>${money(r.returnCharge)}</td>
-      <td>${money(r.returnCost)}</td>
-      <td>${money(r.rtvPct)}</td>
-      <td>${money(r.rtvCodb)}</td>
       <td>${money(r.payoutAfterCodb)}</td>
-      <td>${money(r.tp)}</td>
       <td class="${cls}">
         ${money(r.tpProfitRs)}
       </td>
