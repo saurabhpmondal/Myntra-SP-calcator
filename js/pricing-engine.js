@@ -22,12 +22,16 @@ export function solvePrice(
     tp * (1 + targetPct / 100);
 
   for (
-    let seed = Math.max(99, Math.ceil(tp));
-    seed <= CONFIG.LIMITS.MAX_SP_SEARCH;
+    let seed = Math.max(
+      99,
+      Math.ceil(tp)
+    );
+    seed <=
+    CONFIG.LIMITS.MAX_SP_SEARCH;
     seed++
   ) {
     const sp =
-      roundToNext9(seed);
+      applyRounding(seed);
 
     const calc =
       evaluatePrice(
@@ -63,11 +67,11 @@ export function evaluatePrice(
     num(product.tp);
 
   const rtvPct =
-    getRtv(product.styleId);
+    getRtv(
+      product.styleId
+    );
 
-  /* -------------------------------
-     STEP 1: commercial from SP first
-  --------------------------------*/
+  /* STEP 1 */
   let comm =
     findCommercial(
       product.brand,
@@ -79,9 +83,7 @@ export function evaluatePrice(
     comm.level ||
     "default";
 
-  /* -------------------------------
-     STEP 2: GTA from SP + level
-  --------------------------------*/
+  /* STEP 2 */
   const gtaRow =
     findGta(
       product.brand,
@@ -100,9 +102,7 @@ export function evaluatePrice(
   const sellerPrice =
     sp - gta;
 
-  /* -------------------------------
-     STEP 3: Final commercial on seller price
-  --------------------------------*/
+  /* STEP 3 */
   comm =
     findCommercial(
       product.brand,
@@ -125,12 +125,11 @@ export function evaluatePrice(
   const collectionFee =
     CONFIG.COSTS.COLLECTION_FEE;
 
-  /* -------------------------------
-     SELLER SIDE
-  --------------------------------*/
+  /* SELLER SIDE */
   const commissionRs =
     sellerPrice *
-    commissionPct / 100;
+    commissionPct /
+    100;
 
   const gstBase =
     commissionRs +
@@ -139,24 +138,27 @@ export function evaluatePrice(
 
   const taxOnComFixed =
     gstBase *
-    CONFIG.TAX.GST_PERCENT /
+    CONFIG.TAX
+      .GST_PERCENT /
     100;
 
   const uploadSettlement =
-    sellerPrice
-    - commissionRs
-    - fixedFee
-    - collectionFee
-    - taxOnComFixed;
+    sellerPrice -
+    commissionRs -
+    fixedFee -
+    collectionFee -
+    taxOnComFixed;
 
   const tds =
     uploadSettlement *
-    CONFIG.TAX.TDS_PERCENT /
+    CONFIG.TAX
+      .TDS_PERCENT /
     100;
 
   const tcs =
     uploadSettlement *
-    CONFIG.TAX.TCS_PERCENT /
+    CONFIG.TAX
+      .TCS_PERCENT /
     100;
 
   const tdsTcs =
@@ -166,39 +168,39 @@ export function evaluatePrice(
     uploadSettlement -
     tdsTcs;
 
-  /* -------------------------------
-     CUSTOMER SIDE
-  --------------------------------*/
+  /* CUSTOMER SIDE */
   const royalty =
     sp *
-    royaltyPct / 100;
+    royaltyPct /
+    100;
 
   const marketing =
     sp *
-    marketingPct / 100;
+    marketingPct /
+    100;
 
   const rebate = 0;
 
   const payoutBeforeCodb =
-    bankSettlement
-    - royalty
-    - marketing
-    - rebate;
+    bankSettlement -
+    royalty -
+    marketing -
+    rebate;
 
-  /* -------------------------------
-     CODB
-  --------------------------------*/
+  /* CODB */
   const dispatchCost =
     getDispatchCost(sp);
 
   const returnCharge =
-    CONFIG.COSTS.RETURN_CHARGE;
+    CONFIG.COSTS
+      .RETURN_CHARGE;
 
   const returnCost =
     (fixedFee +
       returnCharge) *
     (1 +
-      CONFIG.TAX.GST_PERCENT /
+      CONFIG.TAX
+        .GST_PERCENT /
         100);
 
   const rawRtv =
@@ -215,9 +217,9 @@ export function evaluatePrice(
     );
 
   const payoutAfterCodb =
-    payoutBeforeCodb
-    - dispatchCost
-    - rtvCodb;
+    payoutBeforeCodb -
+    dispatchCost -
+    rtvCodb;
 
   const tpProfitRs =
     payoutAfterCodb -
@@ -226,7 +228,8 @@ export function evaluatePrice(
   const tpProfitPct =
     tp > 0
       ? (
-          tpProfitRs / tp
+          tpProfitRs /
+          tp
         ) * 100
       : 0;
 
@@ -289,12 +292,33 @@ function getDispatchCost(sp) {
   return 35;
 }
 
+/* MAIN ROUNDING */
+function applyRounding(v) {
+  const mode =
+    CONFIG.ROUNDING
+      ?.MODE || "INT";
+
+  if (mode === "9") {
+    return roundToNext9(v);
+  }
+
+  /* default integer */
+  return Math.round(
+    num(v)
+  );
+}
+
+/* LEGACY 9 ENDING */
 function roundToNext9(v) {
   const n =
-    Math.ceil(num(v));
+    Math.ceil(
+      num(v)
+    );
 
   const base =
-    Math.floor(n / 10) *
+    Math.floor(
+      n / 10
+    ) *
       10 +
     9;
 
