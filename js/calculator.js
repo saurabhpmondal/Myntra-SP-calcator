@@ -25,7 +25,7 @@ export function initCalculator() {
 }
 
 /* ----------------------------------
-   SEARCH TAB
+   SEARCH
 -----------------------------------*/
 function bindSearch() {
   const btn =
@@ -85,7 +85,6 @@ export function runCalculation() {
 
   let product = null;
 
-  /* numeric = style id */
   if (/^\d+$/.test(query)) {
     product =
       getProductByStyle(
@@ -93,7 +92,6 @@ export function runCalculation() {
       );
   }
 
-  /* fallback sku */
   if (!product) {
     product =
       getProductBySku(
@@ -184,7 +182,7 @@ function renderSearchBlock(
 }
 
 /* ----------------------------------
-   MANUAL CALCULATOR
+   MANUAL
 -----------------------------------*/
 function bindManual() {
   const mode =
@@ -340,7 +338,7 @@ function renderManualBlock(
 }
 
 /* ----------------------------------
-   HTML
+   COMPACT HTML
 -----------------------------------*/
 function fullResultHtml(
   r,
@@ -376,7 +374,7 @@ function fullResultHtml(
       </div>
 
       <div class="result-box">
-        <div class="result-label">Profit Rs</div>
+        <div class="result-label">Profit</div>
         <div class="result-value ${cls}">
           ₹${money(r.tpProfitRs)}
         </div>
@@ -391,28 +389,27 @@ function fullResultHtml(
 
     </div>
 
-    <div class="breakdown">
+    <div class="breakdown compact-break">
 
       ${meta}
 
-      ${line("GT Charge", r.gta)}
+      ${line("GT", r.gta)}
       ${line("List Price", r.listPrice)}
-      ${line("Commission %", r.commissionPct)}
-      ${line("Commission Rs", r.commissionRs)}
-      ${line("Fixed Fee", r.fixedFee)}
+      ${line("Com %", r.commissionPct)}
+      ${line("Com Rs", r.commissionRs)}
+      ${line("Fixed", r.fixedFee)}
       ${line("Tax", r.taxOnComFixed)}
-      ${line("Upload Settlement", r.uploadSettlement)}
-      ${line("TDS + TCS", r.tdsTcs)}
-      ${line("Bank Settlement", r.bankSettlement)}
+      ${line("Upload", r.uploadSettlement)}
+      ${line("TDS+TCS", r.tdsTcs)}
+      ${line("Bank", r.bankSettlement)}
       ${line("Royalty", r.royalty)}
       ${line("Marketing", r.marketing)}
-      ${line("Payout Before CODB", r.payoutBeforeCodb)}
+      ${line("Before CODB", r.payoutBeforeCodb)}
       ${line("Dispatch", r.dispatchCost)}
-      ${line("Return Charge", r.returnCharge)}
-      ${line("Return Cost", r.returnCost)}
+      ${line("Return", r.returnCharge)}
       ${line("RTV %", r.rtvPct)}
       ${line("RTV CODB", r.rtvCodb)}
-      ${line("Payout After CODB", r.payoutAfterCodb)}
+      ${line("After CODB", r.payoutAfterCodb)}
 
     </div>
   `;
@@ -424,8 +421,8 @@ function line(
 ) {
   return `
     <div class="break-row">
-      <div>${label}</div>
-      <div>${money(value)}</div>
+      <span>${label}</span>
+      <b>${money(value)}</b>
     </div>
   `;
 }
@@ -436,8 +433,8 @@ function lineText(
 ) {
   return `
     <div class="break-row">
-      <div>${label}</div>
-      <div>${value || ""}</div>
+      <span>${label}</span>
+      <b>${value || ""}</b>
     </div>
   `;
 }
