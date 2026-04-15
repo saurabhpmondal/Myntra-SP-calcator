@@ -149,14 +149,16 @@ export function evaluatePrice(
     collectionFee -
     taxOnComFixed;
 
+  /* FIXED:
+     TDS/TCS ON SELLER PRICE */
   const tds =
-    uploadSettlement *
+    sellerPrice *
     CONFIG.TAX
       .TDS_PERCENT /
     100;
 
   const tcs =
-    uploadSettlement *
+    sellerPrice *
     CONFIG.TAX
       .TCS_PERCENT /
     100;
@@ -169,15 +171,34 @@ export function evaluatePrice(
     tdsTcs;
 
   /* CUSTOMER SIDE */
-  const royalty =
+
+  /* FIXED:
+     GST ON ROYALTY */
+  const royaltyBase =
     sp *
     royaltyPct /
     100;
 
-  const marketing =
+  const royalty =
+    royaltyBase *
+    (1 +
+      CONFIG.TAX
+        .GST_PERCENT /
+        100);
+
+  /* FIXED:
+     GST ON MARKETING */
+  const marketingBase =
     sp *
     marketingPct /
     100;
+
+  const marketing =
+    marketingBase *
+    (1 +
+      CONFIG.TAX
+        .GST_PERCENT /
+        100);
 
   const rebate = 0;
 
@@ -292,7 +313,6 @@ function getDispatchCost(sp) {
   return 35;
 }
 
-/* MAIN ROUNDING */
 function applyRounding(v) {
   const mode =
     CONFIG.ROUNDING
@@ -302,13 +322,11 @@ function applyRounding(v) {
     return roundToNext9(v);
   }
 
-  /* default integer */
   return Math.round(
     num(v)
   );
 }
 
-/* LEGACY 9 ENDING */
 function roundToNext9(v) {
   const n =
     Math.ceil(
