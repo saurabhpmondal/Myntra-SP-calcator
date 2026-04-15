@@ -61,17 +61,13 @@
 .control-panel{
   padding:0 14px 12px;
   display:grid;
-  grid-template-columns:180px 1fr 110px;
+  grid-template-columns:180px 1fr 150px 110px;
   gap:10px;
   align-items:end;
 }
 
 .control-item{
   min-width:0;
-}
-
-.control-item.grow{
-  width:100%;
 }
 
 .tabs{
@@ -104,7 +100,7 @@
 
 .grid-4{
   display:grid;
-  grid-template-columns:1fr 1fr 180px 140px;
+  grid-template-columns:1.4fr 150px 120px 120px;
   gap:10px;
   align-items:end;
 }
@@ -116,14 +112,29 @@
   border-radius:12px;
 }
 
-/* header sticky */
+/* ----------------------------------
+   TABLES
+-----------------------------------*/
 #pricingTable thead th{
   position:sticky;
   top:0;
   z-index:5;
+  background:#f8fafc;
 }
 
-/* sticky first 2 columns */
+#pricingTable,
+#summaryTable{
+  font-size:13px;
+}
+
+#pricingTable th,
+#pricingTable td,
+#summaryTable th,
+#summaryTable td{
+  padding:8px 10px;
+  white-space:nowrap;
+}
+
 #pricingTable th:nth-child(1),
 #pricingTable td:nth-child(1){
   position:sticky;
@@ -140,14 +151,22 @@
   background:#ffffff;
 }
 
+#pricingTable th:nth-child(3),
+#pricingTable td:nth-child(3){
+  position:sticky;
+  left:240px;
+  z-index:4;
+  background:#ffffff;
+}
+
 #pricingTable thead th:nth-child(1),
-#pricingTable thead th:nth-child(2){
+#pricingTable thead th:nth-child(2),
+#pricingTable thead th:nth-child(3){
   z-index:8;
 }
 
-/* brand summary */
 #summaryTable{
-  min-width:720px;
+  min-width:620px;
 }
 
 #summaryTable td:nth-child(n+2),
@@ -155,6 +174,9 @@
   text-align:right;
 }
 
+/* ----------------------------------
+   RESULT BOX
+-----------------------------------*/
 .result-grid{
   display:grid;
   grid-template-columns:repeat(4,1fr);
@@ -164,7 +186,7 @@
 .result-box{
   border:1px solid #edf0f2;
   border-radius:12px;
-  padding:12px;
+  padding:10px;
   background:#fafafa;
 }
 
@@ -183,7 +205,13 @@
 .breakdown{
   margin-top:12px;
   border-top:1px dashed #e5e7eb;
-  padding-top:12px;
+  padding-top:10px;
+}
+
+.compact-break{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:0 14px;
 }
 
 .break-row{
@@ -199,19 +227,13 @@
   border-bottom:none;
 }
 
-.right{
-  text-align:right;
-}
+.right{text-align:right;}
+.center{text-align:center;}
+.hide{display:none !important;}
 
-.center{
-  text-align:center;
-}
-
-.hide{
-  display:none !important;
-}
-
-/* loader states */
+/* ----------------------------------
+   LOADER
+-----------------------------------*/
 #loadStatus.loading{
   background:#fff1f0;
   color:#d93025;
@@ -231,7 +253,9 @@
   100%{opacity:1}
 }
 
-/* Tablet */
+/* ----------------------------------
+   TABLET
+-----------------------------------*/
 @media (max-width:1024px){
 
   .control-panel{
@@ -245,9 +269,15 @@
   .result-grid{
     grid-template-columns:1fr 1fr;
   }
+
+  .compact-break{
+    grid-template-columns:1fr;
+  }
 }
 
-/* Mobile */
+/* ----------------------------------
+   MOBILE
+-----------------------------------*/
 @media (max-width:768px){
 
   .topbar{
@@ -289,6 +319,10 @@
     grid-template-columns:1fr;
   }
 
+  .compact-break{
+    grid-template-columns:1fr;
+  }
+
   .tab{
     flex:1;
     padding:0 10px;
@@ -302,21 +336,9 @@
   #pricingTable td:nth-child(2){
     left:125px;
   }
-}
 
-#pricingTable th:nth-child(3),
-#pricingTable td:nth-child(3){
-  position: sticky;
-  left: 245px;
-  z-index:4;
-  background:#ffffff;
-}
-
-#pricingTable thead th:nth-child(3){
-  z-index:8;
-}
-
-#pricingTable th:nth-child(3),
-#pricingTable td:nth-child(3){
-  left:220px;
+  #pricingTable th:nth-child(3),
+  #pricingTable td:nth-child(3){
+    left:225px;
+  }
 }
