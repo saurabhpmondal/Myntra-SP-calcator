@@ -303,3 +303,20 @@
     left:125px;
   }
 }
+
+#pricingTable th:nth-child(3),
+#pricingTable td:nth-child(3){
+  position: sticky;
+  left: 245px;
+  z-index:4;
+  background:#ffffff;
+}
+
+#pricingTable thead th:nth-child(3){
+  z-index:8;
+}
+
+#pricingTable th:nth-child(3),
+#pricingTable td:nth-child(3){
+  left:220px;
+}
