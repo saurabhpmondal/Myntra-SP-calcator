@@ -338,7 +338,7 @@ function renderManualBlock(
 }
 
 /* ----------------------------------
-   COMPACT HTML
+   OLD PREMIUM TABLE FORMAT
 -----------------------------------*/
 function fullResultHtml(
   r,
@@ -365,16 +365,20 @@ function fullResultHtml(
 
       <div class="result-box">
         <div class="result-label">SP</div>
-        <div class="result-value">₹${money(r.sp)}</div>
+        <div class="result-value">
+          ₹${money(r.sp)}
+        </div>
       </div>
 
       <div class="result-box">
         <div class="result-label">TP</div>
-        <div class="result-value">₹${money(r.tp)}</div>
+        <div class="result-value">
+          ₹${money(r.tp)}
+        </div>
       </div>
 
       <div class="result-box">
-        <div class="result-label">Profit</div>
+        <div class="result-label">Profit Rs</div>
         <div class="result-value ${cls}">
           ₹${money(r.tpProfitRs)}
         </div>
@@ -389,27 +393,35 @@ function fullResultHtml(
 
     </div>
 
-    <div class="breakdown compact-break">
+    <div class="breakdown">
 
       ${meta}
 
-      ${line("GT", r.gta)}
+      ${line("GT Charge", r.gta)}
       ${line("List Price", r.listPrice)}
-      ${line("Com %", r.commissionPct)}
-      ${line("Com Rs", r.commissionRs)}
-      ${line("Fixed", r.fixedFee)}
+
+      ${line("Commission %", r.commissionPct)}
+      ${line("Commission Rs", r.commissionRs)}
+      ${line("Fixed Fee", r.fixedFee)}
       ${line("Tax", r.taxOnComFixed)}
-      ${line("Upload", r.uploadSettlement)}
-      ${line("TDS+TCS", r.tdsTcs)}
-      ${line("Bank", r.bankSettlement)}
+
+      ${line("Upload Settlement", r.uploadSettlement)}
+      ${line("TDS + TCS", r.tdsTcs)}
+      ${line("Bank Settlement", r.bankSettlement)}
+
       ${line("Royalty", r.royalty)}
       ${line("Marketing", r.marketing)}
-      ${line("Before CODB", r.payoutBeforeCodb)}
+
+      ${line("Payout Before CODB", r.payoutBeforeCodb)}
+
       ${line("Dispatch", r.dispatchCost)}
-      ${line("Return", r.returnCharge)}
+      ${line("Return Charge", r.returnCharge)}
+      ${line("Return Cost", r.returnCost)}
+
       ${line("RTV %", r.rtvPct)}
       ${line("RTV CODB", r.rtvCodb)}
-      ${line("After CODB", r.payoutAfterCodb)}
+
+      ${line("Payout After CODB", r.payoutAfterCodb)}
 
     </div>
   `;
@@ -421,8 +433,10 @@ function line(
 ) {
   return `
     <div class="break-row">
-      <span>${label}</span>
-      <b>${money(value)}</b>
+      <div>${label}</div>
+      <div class="right">
+        ${money(value)}
+      </div>
     </div>
   `;
 }
@@ -433,8 +447,10 @@ function lineText(
 ) {
   return `
     <div class="break-row">
-      <span>${label}</span>
-      <b>${value || ""}</b>
+      <div>${label}</div>
+      <div class="right">
+        ${value || ""}
+      </div>
     </div>
   `;
 }
