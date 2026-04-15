@@ -5,7 +5,10 @@ import { normalizeAllData } from "./normalizer.js";
 import { initCalculator } from "./calculator.js";
 import { renderPricingTable } from "./table.js";
 import { initExport } from "./export.js";
-import { STORE } from "./config.js";
+import {
+  STORE,
+  CONFIG
+} from "./config.js";
 import { renderBrandSummary } from "./brand-summary.js";
 
 /* ----------------------------------
@@ -38,6 +41,8 @@ async function refreshApp() {
 
   fillBrands();
 
+  syncPricingModeUi();
+
   STORE.ui.rowLimit = 50;
 
   renderPricingTable();
@@ -63,6 +68,11 @@ function bindControls() {
       "profitTarget"
     );
 
+  const mode =
+    document.getElementById(
+      "pricingMode"
+    );
+
   const loadMore =
     document.getElementById(
       "loadMoreBtn"
@@ -83,15 +93,36 @@ function bindControls() {
     rerenderAll
   );
 
+  mode?.addEventListener(
+    "change",
+    e => {
+      const value =
+        e.target.value ||
+        "INT";
+
+      CONFIG.ROUNDING.MODE =
+        value;
+
+      STORE.ui.pricingMode =
+        value;
+
+      rerenderAll();
+    }
+  );
+
   loadMore?.addEventListener(
     "click",
     () => {
       STORE.ui.rowLimit += 50;
+
       renderPricingTable();
     }
   );
 }
 
+/* ----------------------------------
+   COMMON RENDER
+-----------------------------------*/
 function rerenderAll() {
   STORE.ui.rowLimit = 50;
 
@@ -138,6 +169,28 @@ function fillBrands() {
         )
         .join("");
   });
+}
+
+/* ----------------------------------
+   PRICING MODE UI
+-----------------------------------*/
+function syncPricingModeUi() {
+  const mode =
+    document.getElementById(
+      "pricingMode"
+    );
+
+  if (!mode) return;
+
+  const current =
+    STORE.ui.pricingMode ||
+    CONFIG.ROUNDING.MODE ||
+    "INT";
+
+  mode.value = current;
+
+  CONFIG.ROUNDING.MODE =
+    current;
 }
 
 /* ----------------------------------
