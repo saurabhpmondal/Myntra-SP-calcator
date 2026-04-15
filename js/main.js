@@ -12,6 +12,12 @@ import {
 import { renderBrandSummary } from "./brand-summary.js";
 
 /* ----------------------------------
+   CACHE
+-----------------------------------*/
+let lastRenderKey = "";
+let summaryRenderKey = "";
+
+/* ----------------------------------
    INIT
 -----------------------------------*/
 document.addEventListener(
@@ -40,13 +46,14 @@ async function refreshApp() {
   normalizeAllData();
 
   fillBrands();
-
   syncPricingModeUi();
 
   STORE.ui.rowLimit = 50;
 
-  renderPricingTable();
-  renderBrandSummary();
+  lastRenderKey = "";
+  summaryRenderKey = "";
+
+  renderAllFresh();
 }
 
 /* ----------------------------------
@@ -114,20 +121,69 @@ function bindControls() {
     "click",
     () => {
       STORE.ui.rowLimit += 50;
-
       renderPricingTable();
     }
   );
 }
 
 /* ----------------------------------
-   COMMON RENDER
+   SMART RENDER
 -----------------------------------*/
 function rerenderAll() {
   STORE.ui.rowLimit = 50;
 
+  const key =
+    getRenderKey();
+
+  if (
+    key !== lastRenderKey
+  ) {
+    renderPricingTable();
+    lastRenderKey = key;
+  }
+
+  if (
+    key !==
+    summaryRenderKey
+  ) {
+    renderBrandSummary();
+    summaryRenderKey =
+      key;
+  }
+}
+
+function renderAllFresh() {
+  const key =
+    getRenderKey();
+
   renderPricingTable();
   renderBrandSummary();
+
+  lastRenderKey = key;
+  summaryRenderKey =
+    key;
+}
+
+function getRenderKey() {
+  const brand =
+    document.getElementById(
+      "brandFilter"
+    )?.value || "";
+
+  const target =
+    document.getElementById(
+      "profitTarget"
+    )?.value || "5";
+
+  const mode =
+    CONFIG.ROUNDING.MODE ||
+    "INT";
+
+  return [
+    brand,
+    target,
+    mode
+  ].join("|");
 }
 
 /* ----------------------------------
@@ -172,7 +228,7 @@ function fillBrands() {
 }
 
 /* ----------------------------------
-   PRICING MODE UI
+   MODE UI
 -----------------------------------*/
 function syncPricingModeUi() {
   const mode =
@@ -245,9 +301,14 @@ function bindTabs() {
           key;
 
         if (
-          key === "summary"
+          key ===
+            "summary" &&
+          summaryRenderKey !==
+            getRenderKey()
         ) {
           renderBrandSummary();
+          summaryRenderKey =
+            getRenderKey();
         }
       }
     );
