@@ -3,7 +3,7 @@
 export const CONFIG = {
 
   APP_NAME: "Myntra Reverse Pricing",
-  VERSION: "2.0",
+  VERSION: "4.0",
 
   SHEETS: {
     PRODUCT_MASTER:
@@ -57,16 +57,15 @@ export const CONFIG = {
   },
 
   ROUNDING: {
+    MODE: "INT",
     END_DIGIT: 9
   }
 
 };
 
-
 /* ------------------------------
    GLOBAL RUNTIME STORE
 --------------------------------*/
-
 export const STORE = {
   raw: {
     productMaster: [],
@@ -87,7 +86,8 @@ export const STORE = {
     currentTarget: 5,
     searchText: "",
     rowLimit: 100,
-    activeTab: "calculator"
+    activeTab: "calculator",
+    pricingMode: "INT"
   },
 
   meta: {
@@ -96,25 +96,20 @@ export const STORE = {
   }
 };
 
-
 /* ------------------------------
    HELPERS
 --------------------------------*/
-
 export function money(value) {
   const n = Number(value || 0);
   return n.toFixed(2);
 }
 
-/* FIXED: handles %, commas, spaces */
 export function num(value) {
   if (
     value === null ||
     value === undefined ||
     value === ""
-  ) {
-    return 0;
-  }
+  ) return 0;
 
   const cleaned = String(value)
     .replace(/,/g, "")
