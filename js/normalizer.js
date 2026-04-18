@@ -185,9 +185,15 @@ function normalizeGta() {
 
 /* ----------------------------------
    RTV MAP
-   NEW RULE:
-   If sales < 20 units
-   force 35%
+   STYLE BASED
+
+   Orders file style_id
+   Returns file style_id
+
+   Rules:
+   sales < 20 => 35%
+   no sales => 35%
+   else actual %
 -----------------------------------*/
 function buildRtvMap() {
   const orders =
@@ -197,26 +203,18 @@ function buildRtvMap() {
     STORE.raw.returns ||
     [];
 
-  const orderLineMap =
-    {};
-
   const orderCount =
     {};
 
   const returnCount =
     {};
 
+  /* sales count by style */
   orders.forEach(row => {
     const styleId =
       cleanStyleId(
         row.style_id ||
           row.styleid
-      );
-
-    const orderLine =
-      text(
-        row.order_line_id ||
-          row.orderlineid
       );
 
     if (
@@ -232,32 +230,23 @@ function buildRtvMap() {
       (orderCount[
         styleId
       ] || 0) + 1;
-
-    if (orderLine) {
-      orderLineMap[
-        orderLine
-      ] = styleId;
-    }
   });
 
+  /* return count by style */
   returnsData.forEach(
     row => {
-      const orderLine =
-        text(
-          row.order_line_id ||
-            row.orderlineid
+      const styleId =
+        cleanStyleId(
+          row.style_id ||
+            row.styleid
         );
 
-      if (!orderLine)
+      if (
+        !styleId ||
+        styleId === "0"
+      ) {
         return;
-
-      const styleId =
-        orderLineMap[
-          orderLine
-        ];
-
-      if (!styleId)
-        return;
+      }
 
       returnCount[
         styleId
@@ -270,9 +259,18 @@ function buildRtvMap() {
 
   const rtvMap = {};
 
-  Object.keys(
-    orderCount
-  ).forEach(id => {
+  /* all styles from both files */
+  const allIds =
+    new Set([
+      ...Object.keys(
+        orderCount
+      ),
+      ...Object.keys(
+        returnCount
+      )
+    ]);
+
+  allIds.forEach(id => {
     const ord =
       orderCount[id] ||
       0;
@@ -285,7 +283,6 @@ function buildRtvMap() {
       CONFIG.COSTS
         .DEFAULT_RTV_PERCENT;
 
-    /* NEW SAFETY RULE */
     if (ord < 20) {
       pct =
         CONFIG.COSTS
