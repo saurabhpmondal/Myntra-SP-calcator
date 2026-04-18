@@ -5,17 +5,23 @@ import { normalizeAllData } from "./normalizer.js";
 import { initCalculator } from "./calculator.js";
 import { renderPricingTable } from "./table.js";
 import { initExport } from "./export.js";
+
 import {
   STORE,
   CONFIG
 } from "./config.js";
-import { renderBrandSummary } from "./brand-summary.js";
+
+import {
+  renderBrandSummary
+} from "./brand-summary.js";
 
 /* ----------------------------------
    CACHE
 -----------------------------------*/
 let lastRenderKey = "";
 let summaryRenderKey = "";
+let pricingLoaded = false;
+let summaryLoaded = false;
 
 /* ----------------------------------
    INIT
@@ -46,14 +52,19 @@ async function refreshApp() {
   normalizeAllData();
 
   fillBrands();
+  fillTargets();
   syncPricingModeUi();
 
   STORE.ui.rowLimit = 50;
 
+  pricingLoaded = false;
+  summaryLoaded = false;
+
   lastRenderKey = "";
   summaryRenderKey = "";
 
-  renderAllFresh();
+  /* fast first load:
+     do not render heavy tabs now */
 }
 
 /* ----------------------------------
@@ -121,6 +132,7 @@ function bindControls() {
     "click",
     () => {
       STORE.ui.rowLimit += 50;
+
       renderPricingTable();
     }
   );
@@ -132,36 +144,24 @@ function bindControls() {
 function rerenderAll() {
   STORE.ui.rowLimit = 50;
 
-  const key =
-    getRenderKey();
+  lastRenderKey = "";
+  summaryRenderKey = "";
 
-  if (
-    key !== lastRenderKey
-  ) {
+  if (pricingLoaded) {
     renderPricingTable();
-    lastRenderKey = key;
+    lastRenderKey =
+      getRenderKey();
   }
 
   if (
-    key !==
-    summaryRenderKey
+    summaryLoaded &&
+    STORE.ui.activeTab ===
+      "summary"
   ) {
     renderBrandSummary();
     summaryRenderKey =
-      key;
+      getRenderKey();
   }
-}
-
-function renderAllFresh() {
-  const key =
-    getRenderKey();
-
-  renderPricingTable();
-  renderBrandSummary();
-
-  lastRenderKey = key;
-  summaryRenderKey =
-    key;
 }
 
 function getRenderKey() {
@@ -187,7 +187,7 @@ function getRenderKey() {
 }
 
 /* ----------------------------------
-   BRAND FILTERS
+   DROPDOWNS
 -----------------------------------*/
 function fillBrands() {
   const brands = [
@@ -227,9 +227,36 @@ function fillBrands() {
   });
 }
 
-/* ----------------------------------
-   MODE UI
------------------------------------*/
+function fillTargets() {
+  const el =
+    document.getElementById(
+      "profitTarget"
+    );
+
+  if (!el) return;
+
+  el.innerHTML =
+    CONFIG.TARGET_OPTIONS
+      .map(opt => {
+        const selected =
+          String(
+            opt.value
+          ) === "5"
+            ? "selected"
+            : "";
+
+        return `
+          <option
+            value="${opt.value}"
+            ${selected}
+          >
+            ${opt.label}
+          </option>
+        `;
+      })
+      .join("");
+}
+
 function syncPricingModeUi() {
   const mode =
     document.getElementById(
@@ -300,15 +327,41 @@ function bindTabs() {
         STORE.ui.activeTab =
           key;
 
+        const renderKey =
+          getRenderKey();
+
+        /* Lazy pricing */
         if (
-          key ===
-            "summary" &&
-          summaryRenderKey !==
-            getRenderKey()
+          key === "master"
         ) {
-          renderBrandSummary();
-          summaryRenderKey =
-            getRenderKey();
+          if (
+            !pricingLoaded ||
+            lastRenderKey !==
+              renderKey
+          ) {
+            renderPricingTable();
+
+            pricingLoaded = true;
+            lastRenderKey =
+              renderKey;
+          }
+        }
+
+        /* Lazy summary */
+        if (
+          key === "summary"
+        ) {
+          if (
+            !summaryLoaded ||
+            summaryRenderKey !==
+              renderKey
+          ) {
+            renderBrandSummary();
+
+            summaryLoaded = true;
+            summaryRenderKey =
+              renderKey;
+          }
         }
       }
     );
