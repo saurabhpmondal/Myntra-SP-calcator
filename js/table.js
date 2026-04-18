@@ -1,125 +1,73 @@
 // js/table.js
 
-import { STORE, money, showToast } from "./config.js";
+import {
+  STORE,
+  money,
+  showToast
+} from "./config.js";
+
 import { solvePrice } from "./pricing-engine.js";
 
-/* ----------------------------------
-   STATE
------------------------------------*/
+/* ---------------------------------- */
 let visibleCount = 50;
+let salesMap = null;
 
-/* ----------------------------------
-   INIT
------------------------------------*/
-export function initTable() {
-  bindEvents();
-}
-
-/* ----------------------------------
-   EVENTS
------------------------------------*/
-function bindEvents() {
-  const target =
-    document.getElementById("profitTarget");
-
-  const brand =
-    document.getElementById("brandFilter");
-
-  const more =
-    document.getElementById("loadMoreBtn");
-
-  target?.addEventListener("change", resetAndRender);
-  brand?.addEventListener("change", resetAndRender);
-
-  more?.addEventListener("click", () => {
-    visibleCount += 50;
-    renderPricingTable();
-  });
-}
-
-/* ----------------------------------
-   FILTERS
------------------------------------*/
-export function fillBrandFilter() {
-  const top =
-    document.getElementById("brandFilter");
-
-  const manual =
-    document.getElementById("manualBrand");
-
-  const brands = [
-    ...new Set(
-      STORE.normalized.products
-        .map(x => x.brand)
-        .filter(Boolean)
-    )
-  ].sort();
-
-  const html =
-    `<option value="">All Brands</option>` +
-    brands.map(
-      b => `<option value="${b}">${b}</option>`
-    ).join("");
-
-  if (top) top.innerHTML = html;
-
-  if (manual) {
-    manual.innerHTML =
-      `<option value="">Select Brand</option>` +
-      brands.map(
-        b => `<option value="${b}">${b}</option>`
-      ).join("");
-  }
-}
-
-/* ----------------------------------
-   RESET
------------------------------------*/
-function resetAndRender() {
-  visibleCount = 50;
-  renderPricingTable();
-}
-
-/* ----------------------------------
-   MAIN TABLE
------------------------------------*/
+/* ---------------------------------- */
 export function renderPricingTable() {
   const head =
-    document.getElementById("pricingHead");
+    document.getElementById(
+      "pricingHead"
+    );
 
   const body =
-    document.getElementById("pricingBody");
+    document.getElementById(
+      "pricingBody"
+    );
 
   const more =
-    document.getElementById("loadMoreBtn");
+    document.getElementById(
+      "loadMoreBtn"
+    );
 
   if (!head || !body) return;
 
-  const allRows = getVisibleRows();
-  const rows =
-    allRows.slice(0, visibleCount);
+  const allRows =
+    getVisibleRows();
 
-  head.innerHTML = headerHtml();
+  const rows =
+    allRows.slice(
+      0,
+      visibleCount
+    );
+
+  head.innerHTML =
+    headerHtml();
 
   if (!rows.length) {
     body.innerHTML = `
       <tr>
-        <td colspan="28" class="center">
+        <td colspan="30" class="center">
           No rows found
         </td>
       </tr>
     `;
 
-    if (more) more.style.display = "none";
+    if (more)
+      more.style.display =
+        "none";
+
     return;
   }
 
   body.innerHTML =
-    rows.map(rowHtml).join("");
+    rows.map(
+      rowHtml
+    ).join("");
 
   if (more) {
     more.style.display =
-      visibleCount >= allRows.length
+      visibleCount >=
+      allRows.length
         ? "none"
         : "block";
 
@@ -127,56 +75,135 @@ export function renderPricingTable() {
       `Load More 50 Rows (${rows.length}/${allRows.length})`;
   }
 
-  showToast("Pricing updated");
+  showToast(
+    "Pricing updated"
+  );
 }
 
-/* ----------------------------------
-   DATA
------------------------------------*/
+/* ---------------------------------- */
 export function getVisibleRows() {
-  const target =
-    Number(
-      document.getElementById("profitTarget")
-        ?.value || 5
-    );
+  const targetRaw =
+    document.getElementById(
+      "profitTarget"
+    )?.value || "5";
 
   const brand =
     (
-      document.getElementById("brandFilter")
-        ?.value || ""
+      document.getElementById(
+        "brandFilter"
+      )?.value || ""
     ).toLowerCase();
 
-  let data =
-    [...STORE.normalized.products];
+  let data = [
+    ...STORE.normalized
+      .products
+  ];
 
   if (brand) {
     data = data.filter(
       x =>
-        x.brand.toLowerCase() === brand
+        x.brand
+          .toLowerCase() ===
+        brand
     );
   }
+
+  buildSalesMap();
 
   const rows = [];
 
   data.forEach(product => {
-    const calc =
-      solvePrice(product, target);
+    const target =
+      getTargetPct(
+        product,
+        targetRaw
+      );
 
-    if (calc) rows.push(calc);
+    const calc =
+      solvePrice(
+        product,
+        target
+      );
+
+    if (calc) {
+      calc.saleUnits =
+        salesMap[
+          product.styleId
+        ] || 0;
+
+      rows.push(calc);
+    }
   });
 
   return rows;
 }
 
-/* ----------------------------------
-   HEADER
------------------------------------*/
+/* ---------------------------------- */
+function getTargetPct(
+  product,
+  targetRaw
+) {
+  if (
+    targetRaw ===
+    "BIG_EVENT"
+  ) {
+    const status =
+      String(
+        product.status || ""
+      )
+        .toLowerCase()
+        .trim();
+
+    return status ===
+      "continue"
+      ? -15
+      : -30;
+  }
+
+  return Number(
+    targetRaw || 5
+  );
+}
+
+/* ---------------------------------- */
+function buildSalesMap() {
+  if (salesMap) return;
+
+  salesMap = {};
+
+  const rows =
+    STORE.raw.orders ||
+    [];
+
+  rows.forEach(row => {
+    const styleId =
+      String(
+        row.style_id ||
+          row.styleid ||
+          ""
+      )
+        .replace(/\.0$/, "")
+        .trim();
+
+    if (!styleId) return;
+
+    salesMap[
+      styleId
+    ] =
+      (salesMap[
+        styleId
+      ] || 0) + 1;
+  });
+}
+
+/* ---------------------------------- */
 function headerHtml() {
   return `
     <tr>
       <th>ERP SKU</th>
       <th>Style ID</th>
       <th>Brand</th>
+      <th>Sale Units</th>
       <th>Article</th>
       <th>Status</th>
       <th>MRP</th>
@@ -206,9 +233,7 @@ function headerHtml() {
   `;
 }
 
-/* ----------------------------------
-   ROW
------------------------------------*/
+/* ---------------------------------- */
 function rowHtml(r) {
   const cls =
     r.tpProfitRs >= 0
@@ -220,6 +245,7 @@ function rowHtml(r) {
       <td>${r.erpSku}</td>
       <td>${r.styleId}</td>
       <td>${r.brand}</td>
+      <td>${r.saleUnits}</td>
       <td>${r.articleType}</td>
       <td>${r.status}</td>
 
