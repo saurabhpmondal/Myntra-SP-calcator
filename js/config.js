@@ -3,7 +3,7 @@
 export const CONFIG = {
 
   APP_NAME: "Myntra Reverse Pricing",
-  VERSION: "4.0",
+  VERSION: "4.1",
 
   SHEETS: {
     PRODUCT_MASTER:
@@ -48,7 +48,8 @@ export const CONFIG = {
     { label: "TP +0%", value: 0 },
     { label: "TP -5%", value: -5 },
     { label: "TP -10%", value: -10 },
-    { label: "TP -15%", value: -15 }
+    { label: "TP -15%", value: -15 },
+    { label: "BIG EVENT", value: "BIG_EVENT" }
   ],
 
   LIMITS: {
@@ -63,9 +64,7 @@ export const CONFIG = {
 
 };
 
-/* ------------------------------
-   GLOBAL RUNTIME STORE
---------------------------------*/
+/* ------------------------------ */
 export const STORE = {
   raw: {
     productMaster: [],
@@ -96,12 +95,9 @@ export const STORE = {
   }
 };
 
-/* ------------------------------
-   HELPERS
---------------------------------*/
+/* helpers */
 export function money(value) {
-  const n = Number(value || 0);
-  return n.toFixed(2);
+  return Number(value || 0).toFixed(2);
 }
 
 export function num(value) {
@@ -117,7 +113,6 @@ export function num(value) {
     .trim();
 
   const n = parseFloat(cleaned);
-
   return isNaN(n) ? 0 : n;
 }
 
@@ -153,8 +148,6 @@ export function showToast(
 
   window.__toastTimer =
     setTimeout(() => {
-      el.classList.remove(
-        "show"
-      );
+      el.classList.remove("show");
     }, 1800);
 }
